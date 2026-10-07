@@ -1,0 +1,12 @@
+﻿@page "/"
+@page "/index"
+@page "/index/{id}"
+@page "/home"
+
+@attribute [Authorize]
+
+
+<PageTitle>Home</PageTitle>
+
+
+<MainStudentSearch SchoolId="@Id" />

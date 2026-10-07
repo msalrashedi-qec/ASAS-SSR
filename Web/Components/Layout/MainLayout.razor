@@ -1,0 +1,82 @@
+﻿@using Web.Components.Partial.Account
+@using System.Globalization
+@inherits LayoutComponentBase
+@attribute [Authorize]
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+
+
+<RadzenComponents @rendermode="InteractiveServer" />
+
+<RadzenDialog />
+
+<div id="overlay" onclick="APP.toggleSidebar()"></div>
+
+<div class="app-shell"
+     lang="@CultureInfo.CurrentUICulture.Name"
+     dir="@LayoutDirection">
+    <div id="sidebar-root">
+        <nav class="sidebar-wrapper print-display-none shadow" id="main-sidebar">
+            <div class="sidebar-brand pt-3 text-center">
+                <SchoolSelector />
+            </div>
+            <div class="sidebar-menu overflow-auto">
+                <NavMenu />
+            </div>
+        </nav>
+    </div>
+
+    <!-- ── Main ── -->
+    <main class="app-main">
+
+        <!-- Topbar -->
+        <header class="topbar print-display-none">
+            <span class="material-symbols-outlined d-lg-none pointer" style="font-size: 50px;" onclick="APP.toggleSidebar()">menu</span>
+            <AuthorizeView Policy="@Policies.Reports.ViewDashboard" Context="DashboardAuth">
+                <Authorized>
+                    <a href="dashboard" class="btn btn-brand culture-selector" title="@(_localizer["SelectedLanguage"] == "ar" ? "لوحة البيانات" : "Dashboard")">
+                        <span class="material-symbols-outlined">dashboard</span>
+                    </a>
+                </Authorized>
+            </AuthorizeView>
+            <div class="topbar-actions">
+                 <CultureSelector  />
+                @* <Notifications /> *@
+                <LoggedInUser />
+            </div>
+        </header>
+
+        <section class="bordered-section mt-2">
+            <div class="content-wrapper box mt-0 overflow-auto" id="dvToPrint">
+                @Body
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Modal at root level, outside sidebar -->
+<SchoolSelectorModal />
+
+@code {
+    private string LayoutDirection =>
+        CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged += AuthStateChanged;
+    }
+
+    private async void AuthStateChanged(Task<AuthenticationState> task)
+    {
+        var authState = await task;
+
+        if (!authState.User.Identity?.IsAuthenticated ?? true)
+            _navigator.NavigateTo("Account/Login", true);
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= AuthStateChanged;
+    }
+}

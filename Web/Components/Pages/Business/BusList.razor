@@ -1,0 +1,255 @@
+@page "/buses"
+@attribute [Authorize]
+
+<div class="modal fade" id="BusDetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">@T("Bus details", "بيانات الحافلة")</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="model" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger" />
+                    <div class="row">
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Bus name", "اسم الحافلة")</label>
+                            <InputText class="form-control" @bind-Value="model.Name" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Plate number", "رقم اللوحة")</label>
+                            <InputText class="form-control" @bind-Value="model.PlateNo" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Bus type", "نوع الحافلة")</label>
+                            <InputSelect class="form-control" @bind-Value="model.TypeId">
+                                <option value="0">@T("Select type", "اختر النوع")</option>
+                                @foreach (var type in types)
+                                {
+                                    <option value="@type.Id">@Localized(type.Name, type.NameAr)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Manufacturing year", "سنة الصنع")</label>
+                            <InputNumber class="form-control" @bind-Value="model.ManufacturingYear" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Color", "اللون")</label>
+                            <InputText class="form-control" @bind-Value="model.Color" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Capacity", "السعة")</label>
+                            <InputNumber class="form-control" @bind-Value="model.Capacity" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("VIN", "رقم الهيكل")</label>
+                            <InputText class="form-control" @bind-Value="model.VIN" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Registration number", "رقم الاستمارة")</label>
+                            <InputText class="form-control" @bind-Value="model.RegisterNo" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            <label class="form-label">@T("Registration expiry", "انتهاء الاستمارة")</label>
+                            <InputDate class="form-control" @bind-Value="model.RegistrationExpiry" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">@T("Save", "حفظ")</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="BusAssignmentsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" data-bs-focus="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">@T("Bus assignments", "إسنادات الحافلة") — @selectedBus?.Name</h2>
+                <div style="text-align: left"><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            </div>
+            @if (isAssignmentProcessing)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body">
+                @if (drivers.Count == 0)
+                {
+                    <div class="alert alert-warning">@T("Add at least one driver before creating an assignment.", "أضف سائقاً واحداً على الأقل قبل إنشاء الإسناد.")</div>
+                }
+                else
+                {
+                    <h3 class="mb-3">@T("Assign a new driver", "إسناد الحافلة لسائق جديد")</h3>
+                    <EditForm Model="assignmentModel" OnValidSubmit="SaveAssignmentAsync">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="bd-callout bd-callout-danger" />
+                        <div class="row align-items-end">
+                            <div class="col-md-6 p-2">
+                                <label class="form-label">@T("Driver", "السائق")</label>
+                                <InputSelect class="form-control" @bind-Value="assignmentModel.DriverId">
+                                    <option value="@Guid.Empty">@T("Select driver", "اختر السائق")</option>
+                                    @foreach (var driver in drivers)
+                                    {
+                                        <option value="@driver.Id">@driver.Name — @driver.Mobile</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-3 p-2">
+                                <label class="form-label">@T("From date", "من تاريخ")</label>
+                                <InputDate class="form-control" @bind-Value="assignmentModel.FromDate" />
+                            </div>
+                            <div class="col-md-3 p-2">
+                                <label class="form-label">@T("To date", "إلى تاريخ")</label>
+                                <InputDate class="form-control" @bind-Value="assignmentModel.ToDate" />
+                            </div>
+                            <div class="col-md-6 p-2">
+                                <label class="form-label">@T("Supervisor name", "اسم المشرف")</label>
+                                <InputText class="form-control" @bind-Value="assignmentModel.SupervisorName" />
+                            </div>
+                            <div class="col-md-4 p-2">
+                                <label class="form-label">@T("Supervisor mobile", "جوال المشرف")</label>
+                                <InputText class="form-control" @bind-Value="assignmentModel.SupervisorMobile" />
+                            </div>
+                            <div class="col-md-2 p-2">
+                                <button type="submit" disabled="@isAssignmentProcessing" class="btn btn-primary w-100">@T("Assign", "إسناد")</button>
+                            </div>
+                        </div>
+                    </EditForm>
+                }
+
+                <hr class="my-4" />
+                <h3>@T("Complete assignment history", "سجل الإسناد الكامل")</h3>
+                @if (isAssignmentLoading)
+                {
+                    <LoadingBar />
+                }
+                else if (busAssignments.Count == 0)
+                {
+                    <div class="alert alert-info mt-3">@T("This bus has no previous assignments.", "لا توجد إسنادات سابقة لهذه الحافلة.")</div>
+                }
+                else
+                {
+                    <div class="table-responsive mt-3">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>@T("Driver", "السائق")</th>
+                                    <th>@T("Period", "الفترة")</th>
+                                    <th>@T("Supervisor", "المشرف")</th>
+                                    <th>@T("Status", "الحالة")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var i = 0; i < busAssignments.Count; i++)
+                                {
+                                    var assignment = busAssignments[i];
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>
+                                            <strong>@assignment.Driver.Name</strong>
+                                            <br />
+                                            <small dir="ltr">@assignment.Driver.Mobile</small>
+                                        </td>
+                                        <td>
+                                            @assignment.FromDate.ToString("yyyy/MM/dd") — @assignment.ToDate.ToString("yyyy/MM/dd")
+                                        </td>
+                                        <td>
+                                            @assignment.SupervisorName
+                                            <br />
+                                            <small dir="ltr">@assignment.SupervisorMobile</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge @AssignmentStatusClass(assignment)">@AssignmentStatusText(assignment)</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<header>
+    <h2>@T("School buses", "إدارة الحافلات المدرسية")</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@T("Control panel", "لوحة التحكم")" />
+            <RadzenBreadCrumbItem Text="@T("Buses", "الحافلات")" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <div class="p-4">
+        <button class="btn btn-outline-primary" @onclick="New" data-bs-toggle="modal" data-bs-target="#BusDetailsModal">
+            <span class="material-symbols-outlined align-middle">add</span> @T("New bus", "حافلة جديدة")
+        </button>
+        @if (isLoading)
+        {
+            <LoadingBar />
+        }
+        else if (buses.Count == 0)
+        {
+            <div class="alert alert-info mt-4">@T("No buses have been added.", "لم تتم إضافة حافلات بعد.")</div>
+        }
+        else
+        {
+            <div class="table-responsive mt-4">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@T("Name", "الاسم")</th>
+                            <th>@T("Plate", "اللوحة")</th>
+                            <th>@T("Type", "النوع")</th>
+                            <th>@T("Year", "سنة الصنع")</th>
+                            <th>@T("Capacity", "السعة")</th>
+                            <th>@T("Registration expiry", "انتهاء الاستمارة")</th>
+                            <th>@T("Action", "الإجراء")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < buses.Count; i++)
+                        {
+                            var bus = buses[i];
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <strong>@bus.Name</strong>
+                                </td>
+                                <td>@bus.PlateNo</td>
+                                <td>@Localized(bus.Type.Name, bus.Type.NameAr)</td>
+                                <td>@bus.ManufacturingYear</td>
+                                <td>@bus.Capacity</td>
+                                <td>
+                                    <span class="@(bus.RegistrationExpiry.Date < DateTime.Today ? "text-danger" : "")">@bus.RegistrationExpiry.ToString("yyyy/MM/dd")</span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" @onclick="() => OpenAssignmentsAsync(bus)" data-bs-toggle="modal" data-bs-target="#BusAssignmentsModal">
+                                        <span class="material-symbols-outlined align-middle">assignment_ind</span> @T("Assignments", "الإسناد")
+                                    </button>
+                                    <span class="material-symbols-outlined icon c-blue pointer align-middle" @onclick="() => Edit(bus)" data-bs-toggle="modal" data-bs-target="#BusDetailsModal">edit</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

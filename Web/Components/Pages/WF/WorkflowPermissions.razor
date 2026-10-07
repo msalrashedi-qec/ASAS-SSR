@@ -1,0 +1,44 @@
+﻿@page "/wf-permissions/{Id:int}/{WorkflowId:int}"
+@attribute [Authorize]
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+     <h4>
+            @_localizer["WfPermissions"] ( @wfPermissions.WfTask.Name )
+        </h4>
+</header>
+<div class="p-2">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Path="workflows" Text="@_localizer["WF"]" />
+            <RadzenBreadCrumbItem Path="@pagePath" Text="@_localizer["Task"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["WfPermissions"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</div>
+<div class="content-body">
+
+    <div class="card m-4">
+        <div class="card-body">
+            <div class="row">
+                @foreach (var permission in wfPermissions.Permissions)
+                {
+                    <div class="col-md-4 p-1">
+                        <input class="form-check-input" type="checkbox" @bind="permission.IsGranted" id="@permission.Id">
+                        <label class="form-check-label" for="@permission.Id">
+                            @permission.Name
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <button type="submit" class="btn btn-primary" @onclick="SaveDataAsync">@_localizer["Save"]</button>
+        </div>
+    </div>
+</div>

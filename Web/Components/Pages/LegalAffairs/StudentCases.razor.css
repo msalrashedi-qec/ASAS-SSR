@@ -1,0 +1,26 @@
+.student-case-dialog {
+    height: 100vh;
+    height: 100dvh;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.student-case-dialog .modal-content {
+    height: 100%;
+    border-radius: 0;
+}
+
+.student-case-dialog .modal-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.student-case-frame {
+    display: block;
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    border: 0;
+}

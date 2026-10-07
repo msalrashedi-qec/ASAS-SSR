@@ -1,0 +1,78 @@
+<div id="recovery-panel-2" style="@PanelStyle">
+    <div class="auth-header">
+        <div class="page-badge">
+            <span class="material-symbols-outlined">password</span>
+            <span>@_localizer["VerifyIdentity"]</span>
+        </div>
+        <h2>
+            <span>@_localizer["EnterVerificationCode"]</span>
+        </h2>
+        <p>
+            <span>@_localizer["WeSentVerificationCode"]</span>
+        </p>
+    </div>
+
+    <div class="alert-soft alert-info mb-4">
+        <span class="material-symbols-outlined">info</span>
+        <span>@_localizer["CheckInboxOrSpam"]</span>
+    </div>
+
+    <EditForm Model="Input" FormName="verify-recovery-code" method="post" OnSubmit="OnSubmitAsync">
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="bd-callout bd-callout-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        <input type="hidden" name="Input.UserId" value="@ResolvedUserId" />
+
+        <div class="otp-group mb-4" style="direction: ltr !important;">
+            <input type="text" name="Input.Code0" value="@Input.Code0" maxlength="1" inputmode="numeric" autocomplete="one-time-code" class="js-otp-input" oninput="handleOtpInput(this,0)" onkeydown="handleOtpKeydown(event,0)" onpaste="handleOtpPaste(event,0)" />
+            <input type="text" name="Input.Code1" value="@Input.Code1" maxlength="1" inputmode="numeric" class="js-otp-input" oninput="handleOtpInput(this,1)" onkeydown="handleOtpKeydown(event,1)" onpaste="handleOtpPaste(event,1)" />
+            <input type="text" name="Input.Code2" value="@Input.Code2" maxlength="1" inputmode="numeric" class="js-otp-input" oninput="handleOtpInput(this,2)" onkeydown="handleOtpKeydown(event,2)" onpaste="handleOtpPaste(event,2)" />
+            <input type="text" name="Input.Code3" value="@Input.Code3" maxlength="1" inputmode="numeric" class="js-otp-input" oninput="handleOtpInput(this,3)" onkeydown="handleOtpKeydown(event,3)" onpaste="handleOtpPaste(event,3)" />
+            <input type="text" name="Input.Code4" value="@Input.Code4" maxlength="1" inputmode="numeric" class="js-otp-input" oninput="handleOtpInput(this,4)" onkeydown="handleOtpKeydown(event,4)" onpaste="handleOtpPaste(event,4)" />
+            <input type="text" name="Input.Code5" value="@Input.Code5" maxlength="1" inputmode="numeric" class="js-otp-input" oninput="handleOtpInput(this,5)" onkeydown="handleOtpKeydown(event,5)" onpaste="handleOtpPaste(event,5)" />
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <span class="fs-sm text-muted" id="js-otp-timer">
+                <span>@_localizer["ResendIn"]</span>
+                <strong id="js-otp-count">60</strong>@_localizer["Second"]
+            </span>
+            <button type="submit"
+                    name="Input.Action"
+                    value="resend"
+                    class="btn btn-sm text-brand"
+                    style="background:none;border:none;font-family:inherit;font-weight:600;cursor:pointer;"
+                    id="js-resend-btn"
+                    disabled="@isResending"
+                    data-processing-text="@_localizer["Processing"]"
+                    onclick="showSubmitButtonProcessing(this)">
+                @if (isResending)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>@_localizer["Processing"]</span>
+                }
+                else
+                {
+                    <span>@_localizer["ResendCode"]</span>
+                }
+            </button>
+        </div>
+
+        <button type="submit" name="Input.Action" value="verify" class="submit-btn w-100" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>@_localizer["Processing"]</span>
+            }
+            else
+            {
+                <span class="material-symbols-outlined">verified</span>
+                <span>@_localizer["VerifyCode"]</span>
+            }
+        </button>
+    </EditForm>
+</div>

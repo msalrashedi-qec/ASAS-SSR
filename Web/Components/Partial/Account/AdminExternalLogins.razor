@@ -1,0 +1,242 @@
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+
+<section aria-labelledby="external-logins-heading">
+    <h5 id="external-logins-heading">@_localizer["ExternalLogins"]</h5>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex align-items-center gap-2 text-muted">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>Loading external logins...</span>
+        </div>
+    }
+    else if (string.IsNullOrWhiteSpace(UserId))
+    {
+        <p class="text-muted mb-0">Select a user to manage their external logins.</p>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(_message))
+        {
+            <div class="alert @(_hasError ? "alert-danger" : "alert-success") py-2" role="alert">
+                @_message
+            </div>
+        }
+
+        @if (_logins.Count == 0)
+        {
+            <p class="text-muted">This user has no external logins.</p>
+        }
+        else
+        {
+            <div class="table-responsive mb-3">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>@_localizer["Provider"]</th>
+                            <th>@_localizer["ProviderKey"]</th>
+                            <th class="text-end">@_localizer["Action"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var login in _logins)
+                        {
+                            <tr>
+                                <td>@(login.ProviderDisplayName ?? login.LoginProvider)</td>
+                                <td class="text-break">@login.ProviderKey</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" disabled="@_isProcessing" @onclick="() => RemoveAsync(login)"> @_localizer["Delete"] </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" for="external-login-provider">@_localizer["Provider"]</label>
+                <input id="external-login-provider" class="form-control" maxlength="128" placeholder="e.g. Mawared" @bind="_loginProvider" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" for="external-login-key">@_localizer["ProviderKey"]</label>
+                <input id="external-login-key" class="form-control" maxlength="128" placeholder="External user identifier" @bind="_providerKey" />
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary w-100" disabled="@_isProcessing" @onclick="AddAsync">
+                    @if (_isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    }
+                    @_localizer["AddLogin"]
+                </button>
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public string UserId { get; set; } = string.Empty;
+
+    private readonly List<UserLoginInfo> _logins = [];
+    private string _loadedUserId = string.Empty;
+    private string _loginProvider = string.Empty;
+    private string _providerKey = string.Empty;
+    private string? _message;
+    private bool _hasError;
+    private bool _isLoading;
+    private bool _isProcessing;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.Equals(_loadedUserId, UserId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _loadedUserId = UserId;
+        _loginProvider = string.Empty;
+        _providerKey = string.Empty;
+        _message = null;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _logins.Clear();
+        if (string.IsNullOrWhiteSpace(UserId))
+        {
+            return;
+        }
+
+        _isLoading = true;
+        try
+        {
+            var user = await UserManager.FindByIdAsync(UserId);
+            if (user is null)
+            {
+                SetError("The selected user could not be found.");
+                return;
+            }
+
+            _logins.AddRange(await UserManager.GetLoginsAsync(user));
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to load external logins: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task AddAsync()
+    {
+        _message = null;
+        var loginProvider = _loginProvider.Trim();
+        var providerKey = _providerKey.Trim();
+        if (string.IsNullOrWhiteSpace(loginProvider) || string.IsNullOrWhiteSpace(providerKey))
+        {
+            SetError("Provider and provider key are required.");
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            SetError("The selected user could not be found.");
+            return;
+        }
+
+        _isProcessing = true;
+        try
+        {
+            var result = await UserManager.AddLoginAsync(user, new UserLoginInfo(loginProvider, providerKey, loginProvider));
+
+            if (!result.Succeeded)
+            {
+                SetError(string.Join(", ", result.Errors.Select(error => error.Description)));
+                return;
+            }
+
+            _loginProvider = string.Empty;
+            _providerKey = string.Empty;
+            SetSuccess("The external login was added.");
+            _logins.Clear();
+            _logins.AddRange(await UserManager.GetLoginsAsync(user));
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to add the external login: {ex.Message}");
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task RemoveAsync(UserLoginInfo login)
+    {
+        _message = null;
+        var confirmed = await _dialogService.Confirm(
+            $"Delete the {login.LoginProvider} external login with provider key \"{login.ProviderKey}\"?",
+            "Confirm deletion",
+            new ConfirmOptions
+            {
+                OkButtonText = "Delete",
+                CancelButtonText = "Cancel",
+                WrapperCssClass = "external-login-confirm"
+            });
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            SetError("The selected user could not be found.");
+            return;
+        }
+
+        _isProcessing = true;
+        try
+        {
+            var result = await UserManager.RemoveLoginAsync(user, login.LoginProvider, login.ProviderKey);
+            if (!result.Succeeded)
+            {
+                SetError(string.Join(", ", result.Errors.Select(error => error.Description)));
+                return;
+            }
+
+            _logins.Remove(login);
+            SetSuccess("The external login was deleted.");
+        }
+        catch (Exception ex)
+        {
+            SetError($"Failed to delete the external login: {ex.Message}");
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void SetError(string message)
+    {
+        _message = message;
+        _hasError = true;
+    }
+
+    private void SetSuccess(string message)
+    {
+        _message = message;
+        _hasError = false;
+    }
+}

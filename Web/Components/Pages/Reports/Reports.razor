@@ -1,0 +1,256 @@
+@page "/reports/{ReportKey}"
+@attribute [Authorize]
+
+<PageTitle>@ActiveReportTitle</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header class="report-screen-header print-display-none">
+    <h2>@ActiveReportTitle</h2>
+</header>
+<RadzenBreadCrumb>
+    <ChildContent>
+        <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+        <RadzenBreadCrumbItem Path="reports" Text="@_localizer["Reports"]" />
+        <RadzenBreadCrumbItem Text="@ActiveReportTitle" />
+    </ChildContent>
+</RadzenBreadCrumb>
+<main class="reports-center report-single-page" dir="rtl">
+   
+    <section class="report-filter-panel print-display-none">
+        <div class="report-filter-heading">
+            <div>
+                <span class="material-symbols-outlined">tune</span>
+                <div>
+                    <h2>@_localizer["SearchOptions"]</h2>
+                </div>
+            </div>
+            <button type="button" class="filter-reset" @onclick="ResetFiltersAsync">
+                <span class="material-symbols-outlined">restart_alt</span> @_localizer["ResetFilters"]
+            </button>
+        </div>
+
+        <div class="report-filter-grid">
+            <label class="report-filter-field">
+                <span>@_localizer["Year"]</span>
+                <RadzenDropDown TValue="int?" Data="yearOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedYearId" Multiple="false" AllowClear="false" AllowFiltering="true" Placeholder="اختر السنة الدراسية" />
+            </label>
+
+            @if (IsMonthlyReport)
+            {
+                <label class="report-filter-field"><span>المدرسة</span>
+                    <RadzenDropDown TValue="Guid" Data="schools" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedSchoolId" AllowFiltering="true" />
+                </label>
+            }
+            @if (ShowAcademicFilters)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["Level"]</span>
+                    <RadzenDropDown TValue="IEnumerable<int>" Data="levelOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedLevelIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل المراحل" />
+                </label>
+                <label class="report-filter-field">
+                    <span>@_localizer["Class"]</span>
+                    <RadzenDropDown TValue="IEnumerable<int>" Data="classOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedClassIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الصفوف" />
+                </label>
+            }
+            @if (ShowStatusFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["Status"]</span>
+                    <RadzenDropDown TValue="IEnumerable<byte>" Data="statusOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedStatusIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الحالات" />
+                </label>
+            }
+            @if (ShowStudentFilter)
+            {
+                <label class="report-filter-field report-filter-wide">
+                    <span>@_localizer["Student"]</span>
+                    <RadzenDropDown PopupStyle="max-height:300px;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:auto" AllowVirtualization="true" TValue="IEnumerable<Guid>" Data="studentOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedStudentIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="كل الطلاب" />
+                </label>
+            }
+            @if (ShowServiceFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["Service"]</span>
+                    <RadzenDropDown TValue="IEnumerable<int>" Data="serviceOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedServiceIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الخدمات" />
+                </label>
+            }
+            @if (ShowSemesterFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["Semester"]</span>
+                    <RadzenDropDown TValue="IEnumerable<byte>" Data="semesterOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedSemesterIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الفصول" />
+                </label>
+            }
+            @if (ShowPaymentFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["PaymentMethod"]</span>
+                    <RadzenDropDown TValue="IEnumerable<byte>" Data="paymentMethodOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedPaymentMethodIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل طرق الدفع" />
+                </label>
+            }
+            @if (ShowVoucherTypeFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["VoucherType"]</span>
+                    <RadzenDropDown TValue="string" Data="voucherTypeOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedVoucherType" />
+                </label>
+            }
+            @if (ShowTransactionFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["TransactionType"]</span>
+                    <RadzenDropDown TValue="IEnumerable<int>" Data="transactionTypeOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedTransactionTypeIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الحركات" />
+                </label>
+            }
+            @if (ShowClassroomFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["ClassRoom"]</span>
+                    <RadzenDropDown TValue="IEnumerable<Guid>" Data="classRoomOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedClassRoomIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الفصول" />
+                </label>
+            }
+            @if (ShowBusFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["Bus"]</span>
+                    <RadzenDropDown TValue="IEnumerable<int>" Data="busOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="selectedBusIds" Multiple="true" Chips="true" AllowClear="true" AllowFiltering="true" Placeholder="كل الحافلات" />
+                </label>
+            }
+            @if (ShowAllocationFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["AllocationStatus"]</span>
+                    <RadzenDropDown TValue="string" Data="allocationOptions" TextProperty="Name" ValueProperty="Id" @bind-Value="allocationMode" />
+                </label>
+            }
+            @if (ShowDateFilter)
+            {
+                <label class="report-filter-field">
+                    <span>@_localizer["FromDate"]</span>
+                    <RadzenDatePicker @bind-Value="dateFrom" DateFormat="dd/MM/yyyy" ShowTime="false" Placeholder="بداية الفترة" />
+                </label>
+                <label class="report-filter-field">
+                    <span>@_localizer["ToDate"]</span>
+                    <RadzenDatePicker @bind-Value="dateTo" DateFormat="dd/MM/yyyy" ShowTime="false" Placeholder="نهاية الفترة" />
+                </label>
+            }
+         
+        </div>
+
+        <div class="report-filter-actions">
+            <span>
+                <span class="material-symbols-outlined">info</span>
+                @_localizer["YearRequired"]
+            </span>
+            <button type="button" class="btn-run-report" @onclick="RunReportAsync" disabled="@isLoading">
+                <span class="material-symbols-outlined">manage_search</span>@(isLoading ? @_localizer["Processing"] : @_localizer["ViewReport"])
+            </button>
+        </div>
+    </section>
+
+    @if (hasRun)
+    {
+        <section class="report-results-toolbar print-display-none">
+            <div>
+                
+            </div>
+            <div class="report-export-actions">
+                <button type="button" class="export-button excel" @onclick="ExportExcelAsync" disabled="@(rows.Count == 0 || isExporting)">
+                    <span class="material-symbols-outlined">table_view</span> @_localizer["Excel"]
+                </button>
+                <button type="button" class="export-button pdf" @onclick="ExportPdfAsync" disabled="@(rows.Count == 0)">
+                    <span class="material-symbols-outlined">picture_as_pdf</span> @_localizer["PDF"]
+                </button>
+                <button type="button" class="export-button print" @onclick="PrintAsync" disabled="@(rows.Count == 0)">
+                    <span class="material-symbols-outlined">print</span> @_localizer["Print"]
+                </button>
+            </div>
+        </section>
+
+        <article id="reports-center-output" class="reports-output @(IsMonthlyReport ? "monthly-report" : null) @(IsUltraWideReport ? "ultra-wide-report" : null)" dir="rtl">
+            <header class="reports-output-heading">
+                <div class="reports-output-meta">
+                    <span>تاريخ الطباعة</span>
+                    <strong dir="ltr">@ReportFormatter.DateTime(printedOn)</strong>
+                </div>
+                <div class="reports-output-title">
+                    <h1>@ActiveReportTitle</h1>
+                    <strong>@SchoolName</strong>
+                    <small>@filterSummary</small>
+                </div>
+                <div class="reports-output-logo">
+                    @if (!string.IsNullOrWhiteSpace(school?.Logo))
+                    {
+                        <img src="@Assets[$"uploads/schools/{school.Logo}"]" alt="@SchoolName" />
+                    }
+                </div>
+            </header>
+            <div class="reports-table-wrap">
+                <table class="reports-data-table">
+                    <thead>
+                        @if (IsMonthlyReport)
+                        {
+                            <tr><th colspan="5" class="monthly-current">العام الحالي</th><th colspan="2" class="monthly-next">التسجيل للعام القادم</th></tr>
+                        }
+                        <tr>
+                            @foreach (var header in headers)
+                            {
+                                <th>@header</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (rows.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="@Math.Max(1, headers.Count)" class="reports-empty">
+                                    <span class="material-symbols-outlined">search_off</span>
+                                    <strong>لا توجد نتائج مطابقة</strong>
+                                    <small>جرّب توسيع خيارات البحث أو إعادة ضبطها</small>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var row in rows)
+                            {
+                                <tr>
+                                    @foreach (var cell in row.Cells)
+                                    {
+                                        <td class="@(cell.Number.HasValue ? "numeric" : null)" dir="@(cell.Number.HasValue ? "ltr" : null)">@cell.Text</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                    @if (IsMonthlyReport)
+                    {
+                        <tfoot><tr>
+                            @foreach (var cell in MonthlyTotalRow().Cells)
+                            {
+                                <th class="@(string.IsNullOrEmpty(cell.Text) ? "monthly-no-total" : null)">@cell.Text</th>
+                            }
+                        </tr></tfoot>
+                    }
+                    @if (activeReportKey == "receipts")
+                    {
+                        <tfoot>
+                            <tr>
+                                <th colspan="4">@_localizer["Total"]</th>
+                                <th class="numeric" dir="ltr">@ReportFormatter.Amount(ReceiptTotalAmount)</th>
+                                <th colspan="5"></th>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+            <footer class="reports-output-footer">
+                <span>تم إنشاء التقرير آلياً من نظام ASAS</span>
+                <span>@rows.Count.ToString("N0") سجل</span>
+            </footer>
+        </article>
+    }
+</main>

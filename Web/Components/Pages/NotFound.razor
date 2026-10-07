@@ -1,0 +1,25 @@
+﻿@page "/not-found"
+@layout AnonymousLayout
+
+<PageTitle>@_localizer["PageNotFound"]</PageTitle>
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-header">
+                @_localizer["PageNotFound"]
+            </div>
+            <div class="card-body text-center">
+                <div class="py-3 text-center">
+                    <span class="text-muted fs-1 fw-bolder">404</span>
+                </div>
+                <p>@_localizer["PageNotFoundMessage"]</p>
+            </div>
+            <div class="card-footer">
+                <div class="text-center">
+                    <a href="home">@_localizer["BackToHome"]</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

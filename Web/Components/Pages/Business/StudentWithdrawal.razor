@@ -1,0 +1,149 @@
+@page "/student-withdrawal/{StudentId:guid}"
+@attribute [Authorize(Policy = Policies.Students.Withdraw)]
+
+<PageTitle>@_localizer["StudentWithdrawal"]</PageTitle>
+
+@if (isLoading || isSaving)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>@_localizer["StudentWithdrawal"]</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["StudentWithdrawal"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+<div class="content-body student-withdrawal-page">
+    @if (!isLoading && student is null)
+    {
+        <div class="withdrawal-empty">
+            <span class="material-symbols-outlined">person_search</span>
+            <p>@_localizer["NotFound"]</p>
+        </div>
+    }
+    else if (student is not null && contract is not null)
+    {
+        <section class="student-summary-card">
+            <div class="student-summary-main">
+                <div class="student-avatar"><span class="material-symbols-outlined">person</span></div>
+                <div>
+                    <h3>@StudentFullName</h3>
+                    <div class="student-meta">
+                        <span><strong>@StudentCode</strong></span>
+                        <span>@($"{Localized(contract.Class.Level.Name, contract.Class.Level.NameAr)} {Localized(contract.Class.Name, contract.Class.NameAr)}")</span>
+                        <span>@contract.Year.Name</span>
+                    </div>
+                </div>
+            </div>
+            <div class="contract-duration">
+                <span class="material-symbols-outlined">date_range</span>
+                <div>
+                    <small>@_localizer["CurrentContractDuration"]</small>
+                    <strong dir="ltr">@contract.StartDate.ToString("dd-MM-yyyy") — @contract.EndDate.ToString("dd-MM-yyyy")</strong>
+                </div>
+            </div>
+        </section>
+
+        @if (!IsActiveContract)
+        {
+            <div class="withdrawal-alert warning">
+                <span class="material-symbols-outlined">info</span>
+                @_localizer["StudentAlreadyWithdrawn"]
+            </div>
+        }
+        else
+        {
+            <EditForm Model="model" OnValidSubmit="WithdrawAsync">
+                <DataAnnotationsValidator />
+
+                <section class="withdrawal-form-card">
+                    <div class="card-heading">
+                        <span class="material-symbols-outlined">person_remove</span>
+                        <div>
+                            <h3>@_localizer["WithdrawalDetails"]</h3>
+                            <p>@_localizer["StudentWithdrawalHelp"]</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label for="WithdrawalDate">@_localizer["StudentWithdrawalDate"] <span>*</span></label>
+                            <RadzenDatePicker id="WithdrawalDate" @bind-Value="model.WithdrawalDate" Change="@(_ => PreviewAsync())" DateFormat="dd/MM/yyyy" Min="contract.StartDate" Max="contract.EndDate" AllowClear="false" Style="width:100%" />
+                            <ValidationMessage For="@(() => model.WithdrawalDate)" />
+                        </div>
+
+                        <div class="field-group reason-field">
+                            <label for="WithdrawalReason">@_localizer["WithdrawalReason"] <span>*</span></label>
+                            <InputTextArea id="WithdrawalReason"
+                                           class="form-control"
+                                           @bind-Value="model.Reason"
+                                           maxlength="1000"
+                                           rows="4"
+                                           required
+                                           placeholder="@_localizer["EnterWithdrawalReason"]" />
+                            <ValidationMessage For="@(() => model.Reason)" />
+                        </div>
+
+                        <label class="additional-penalty-option">
+                            <InputCheckbox @bind-Value="model.IncludeAdditionalPenalty" @bind-Value:after="PreviewAsync" />
+                            <span>
+                                <strong>@_localizer["ApplyAdditionalWithdrawalPenalty"]</strong>
+                                <small>@_localizer["AdditionalWithdrawalPenaltyHelp"]</small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="withdrawal-preview">
+                        <div>
+                            <div class="preview-heading">
+                                <span>@_localizer["SchoolWithdrawalPenalty"]</span>
+                                <span class="penalty-percentage" dir="ltr">@FormatPercentages(schoolPenaltyPercentages)</span>
+                            </div>
+                            <strong dir="ltr">@ReportFormatter.Amount(schoolPenalty)</strong>
+                        </div>
+                        <div>
+                            <span>@_localizer["ActiveTransportSubscriptions"]</span>
+                            <strong>@transportSubscriptions.Count</strong>
+                        </div>
+                        <div>
+                            <div class="preview-heading">
+                                <span>@_localizer["TransportWithdrawalPenalty"]</span>
+                                <span class="penalty-percentage" dir="ltr">@FormatPercentages(transportPenaltyPercentages)</span>
+                            </div>
+                            <strong dir="ltr">@ReportFormatter.Amount(transportPenalty)</strong>
+                        </div>
+                    </div>
+
+                    @if (transportSubscriptions.Count > 0)
+                    {
+                        <div class="withdrawal-alert">
+                            <span class="material-symbols-outlined">directions_bus</span>
+                            @_localizer["TransportWillBeWithdrawnFirst"]
+                        </div>
+                    }
+
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="form-actions">
+                        <button type="submit" class="withdraw-student-btn" disabled="@isSaving">
+                            <span class="material-symbols-outlined">person_off</span>
+                            @_localizer["ConfirmStudentWithdrawal"]
+                        </button>
+                    </div>
+                </section>
+            </EditForm>
+        }
+    }
+    else if (!isLoading)
+    {
+        <div class="withdrawal-empty">
+            <span class="material-symbols-outlined">contract_delete</span>
+            <p>@_localizer["StudentContractNotFound"]</p>
+        </div>
+    }
+</div>

@@ -1,0 +1,88 @@
+@page "/custom-messages"
+@attribute [Authorize]
+
+<header>
+    <h2>@T("Custom messages", "الرسائل المخصصة")</h2>
+</header>
+<RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Path="msg-panel" Text="@T("Messages", "الرسائل")" />
+            <RadzenBreadCrumbItem Text="@T("Custom messages", "الرسائل المخصصة")" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+<div class="content-body custom-messages-page">
+    @if (isLoading)
+    {
+        <LoadingBar />
+    }
+    else
+    {
+        <section class="filter-card">
+            <div class="section-title">
+                <span class="material-symbols-outlined">filter_alt</span>
+                <div><h3>@T("Find recipients", "البحث")</h3><p>@T("Narrow the student list using one or more fields.", "قم بتصفية قائمة الطلاب باستخدام حقل واحد أو أكثر.")</p></div>
+            </div>
+            <div class="filters-grid">
+                <label><span>@T("Student name", "اسم الطالب")</span><input class="form-control" @bind="studentName" @bind:event="oninput" placeholder="@T("Type a name", "اكتب اسم الطالب")" /></label>
+                <label><span>@T("Student status", "حالة الطالب")</span><RadzenDropDown @bind-Value="statusIds" Data="@StatusOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" /></label>
+                <label><span>@T("Nationality", "الجنسية")</span><RadzenDropDown @bind-Value="nationalityIds" Data="@NationalityOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" /></label>
+                <label><span>@T("Gender", "الجنس")</span><RadzenDropDown @bind-Value="genderIds" Data="@GenderOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" /></label>
+                <label><span>@T("Area (district)", "الحي")</span><RadzenDropDown @bind-Value="districtIds" Data="@DistrictOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" /></label>
+                <label><span>@T("Class", "الصف")</span><RadzenDropDown @bind-Value="classIds" Data="@ClassOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" /></label>
+            </div>
+            <div class="filter-actions"><button type="button" class="btn clear-button" @onclick="ClearFilters"><span class="material-symbols-outlined">filter_alt_off</span>@T("Clear", "مسح")</button></div>
+        </section>
+
+        <div class="message-workspace">
+            <section class="recipients-card">
+                <div class="card-heading"><div><span class="eyebrow">@T("Recipients", "المستلمون")</span><h3>@T("Students", "الطلاب")</h3></div><span class="count-pill">@FilteredRows.Count()</span></div>
+                <div class="select-tools">
+                    <label><input type="checkbox" checked="@AreAllVisibleSelected" @onchange="ToggleAllVisible" disabled="@(!SelectableFilteredRows.Any())" /> @T("Select all", "تحديد الكل")</label>
+                    <span>@string.Format(T("{0} selected", "تم تحديد {0}"), selectedStudentIds.Count)</span>
+                </div>
+                <div class="students-table-wrap">
+                    <table class="students-table">
+                        <thead>
+                            <tr>
+                                <th class="check-column"></th>
+                                <th>@T("Student", "الطالب")</th>
+                                <th>@T("Status", "الحالة")</th>
+                                <th>@T("Class", "الصف")</th>
+                                <th>@T("Nationality / gender", "الجنسية / الجنس")</th>
+                                <th>@T("Area", "الحي")</th>
+                                <th>@T("Mobile", "الجوال")</th>
+                            </tr>
+                            </thead>
+                        <tbody>
+                            @foreach (var row in FilteredRows)
+                            {
+                                var selected = selectedStudentIds.Contains(row.Id);
+                                <tr class="@(selected ? "selected" : null) @(row.HasMobile ? null : "disabled-row")" @onclick="() => ToggleStudent(row)">
+                                    <td class="check-column" @onclick:stopPropagation="true"><input type="checkbox" checked="@selected" disabled="@(!row.HasMobile)" @onchange="_ => ToggleStudent(row)" aria-label="@string.Format(T("Select {0}", "تحديد {0}"), row.Name)" /></td>
+                                    <td><strong>@row.Name</strong><small>@row.Number</small></td>
+                                    <td><span class="status-tag" style="--status-color:@row.StatusColor">@row.Status</span></td>
+                                    <td>@row.Class</td><td>@row.Nationality<small>@row.Gender</small></td><td>@row.District</td>
+                                    <td><span dir="ltr">@(row.HasMobile ? row.Mobile : "—")</span>@if (!row.HasMobile) { <small class="missing-mobile">@T("No mobile", "لا يوجد رقم جوال")</small> }</td>
+                                </tr>
+                            }
+                            @if (!FilteredRows.Any())
+                            {
+                                <tr><td colspan="7"><div class="empty-state"><span class="material-symbols-outlined">person_search</span><strong>@T("No matching students", "لا يوجد طلاب مطابقون")</strong><span>@T("Change the filters to broaden the results.", "غيّر عوامل التصفية لتوسيع النتائج.")</span></div></td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="composer-card">
+                <div class="section-title"><span class="material-symbols-outlined">sms</span><div><h3>@T("Compose message", "كتابة الرسالة")</h3><p>@T("The message is sent to the student's contact mobile, or the parent mobile when unavailable.", "تُرسل الرسالة إلى جوال ولي الأمر.")</p></div></div>
+                <label class="message-label" for="message-text">@T("Message text", "نص الرسالة")</label>
+                <textarea id="message-text" class="form-control message-text" maxlength="612" @bind="messageText" @bind:event="oninput" placeholder="@T("Example: Our registration offer is now available...", "مثال: عرض التسجيل متاح الآن...")"></textarea>
+                <div class="message-meta"><span>@string.Format(T("{0} unique mobile numbers", "{0} أرقام جوال فريدة"), UniqueRecipientCount)</span><span>@messageText.Length / 612</span></div>
+                <div class="send-summary"><span class="material-symbols-outlined">campaign</span><div><strong>@string.Format(T("Ready for {0} students", "جاهزة للإرسال إلى {0} طالب"), selectedStudentIds.Count)</strong><small>@T("Shared family mobile numbers receive one copy.", "أرقام جوال الطلاب المشتركة تستقبل نسخة واحدة.")</small></div></div>
+                <button type="button" class="btn send-button" disabled="@(!CanSend)" @onclick="SendAsync"><span class="material-symbols-outlined">@(isSending ? "progress_activity" : "send")</span>@(isSending ? T("Sending...", "جارٍ الإرسال...") : T("Send message", "إرسال الرسالة"))</button>
+            </section>
+        </div>
+    }
+</div>

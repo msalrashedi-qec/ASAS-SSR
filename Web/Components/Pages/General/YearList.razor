@@ -1,0 +1,165 @@
+﻿@page "/years"
+@attribute [Authorize]
+
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_model" OnValidSubmit="SaveDataAsync" >
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12 p-2">
+                                    @_localizer["Name"]:
+                                    <InputText class="form-control" @bind-Value="_model.Name" maxlength="50" />
+                                </div>
+                                <div class="col-md-6 p-2">
+                                    <label for="ChkIsCurrentYear"> @_localizer["IsCurrentYear"]:</label>
+                                    <InputCheckbox class="form-check-input" id="ChkIsCurrentYear"
+                                                   Value="_model.IsCurrent"
+                                                   ValueChanged="OnCurrentYearChanged"
+                                                   ValueExpression="() => _model.IsCurrent" />
+                                </div>
+                                <div class="col-md-6 p-2">
+                                    <label for="ChkIsNextYear"> @_localizer["IsNextYear"]:</label>
+                                    <InputCheckbox class="form-check-input" id="ChkIsNextYear"
+                                                   Value="_model.IsNext"
+                                                   ValueChanged="OnNextYearChanged"
+                                                   ValueExpression="() => _model.IsNext" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 p-2">
+                            @_localizer["Semester"]:
+                            <InputSelect id="classification" @bind-Value="_semester.SemesterId" class="form-control">
+                                @foreach (var item in semesters)
+                                {
+                                    <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["StartDate"]:
+                            <RadzenDatePicker @bind-Value=@_semester.StartDate DateFormat="dd/MM/yyyy" ShowCalendarWeek AllowClear="true" Style="width:100%" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["EndDate"]:
+                            <RadzenDatePicker @bind-Value=@_semester.EndDate DateFormat="dd/MM/yyyy" ShowCalendarWeek AllowClear="true" Style="width:100%" />
+                        </div>
+                        <div class="col-md-12 p-2 text-center">
+                            <a class="btn btn-outline-info" @onclick="AddToList" @onclick:preventDefault>
+                                @_localizer["AddToList"]
+                            </a>
+                        </div>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>@_localizer["Semester"]</th>
+                                <th>@_localizer["StartDate"]</th>
+                                <th>@_localizer["EndDate"]</th>
+                                <th>@_localizer["Action"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in _model.Semesters)
+                            {
+                                <tr>
+                                    <td>@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</td>
+                                    <td>@item.StartDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@item.EndDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <span class="material-symbols-outlined icon c-red pointer" @onclick="() => _model.Semesters.Remove(item)">
+                                            delete
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer center">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                        @_localizer["Save"]
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>
+            @_localizer["Years"]
+        </h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["Years"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <div class="p-4">
+        <button type="button" class="btn btn-outline-primary" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+            @_localizer["New"]
+        </button>
+
+        <div class="overflow-auto pt-3">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@_localizer["Name"]</th>
+                        <th>@_localizer["IsCurrentYear"]</th>
+                        <th>@_localizer["IsNextYear"]</th>
+                        <th>@_localizer["Action"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var item in years)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.Name</td>
+                                <td><input class="form-check-input" type="checkbox" checked="@item.IsCurrent" disabled></td>
+                                <td><input class="form-check-input" type="checkbox" checked="@item.IsNext" disabled></td>
+                                <td>
+                                    <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                                        edit
+                                    </span>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>

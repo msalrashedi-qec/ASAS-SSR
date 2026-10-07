@@ -1,0 +1,108 @@
+.classroom-allocation-page { --navy:#12324b; --blue:#1677b8; --cyan:#2daac4; --line:#dce8ec; --muted:#71808c; background:#f5f8f9; min-height:calc(100vh - 140px); }
+.classroom-workspace { direction:rtl; display:grid; gap:1.25rem; grid-template-columns:minmax(0,1.05fr) minmax(430px,.95fr); }
+.students-panel,.room-panel { background:#fff; border:1px solid #e3ecef; border-radius:18px; box-shadow:0 9px 30px rgba(18,50,75,.065); min-width:0; overflow:hidden; }
+.panel-heading { align-items:center; display:flex; justify-content:space-between; padding:1.2rem 1.3rem .8rem; }
+.eyebrow { color:var(--cyan); display:block; font-size:.7rem; font-weight:900; margin-bottom:.2rem; }
+.panel-heading h3 { color:var(--navy); font-size:1.1rem; font-weight:900; margin:0; }
+.count-pill { align-items:center; background:#eef8fb; border-radius:999px; color:var(--blue); display:flex; font-weight:900; height:36px; justify-content:center; min-width:42px; }
+.filter-grid { display:grid; gap:.65rem; grid-template-columns:repeat(3,minmax(0,1fr)); padding:0 1.3rem 1rem; }
+.filter-grid label>span:first-child { color:#60737e; display:block; font-size:.68rem; font-weight:900; margin-bottom:.3rem; }
+.filter-grid .form-control,.search-input { background:#f7f9fa; border:1px solid #dfe9ec; border-radius:9px; color:var(--navy); font-size:.75rem; min-height:41px; }
+.search-input { align-items:center; display:flex; padding:0 .6rem; }
+.search-input .material-symbols-outlined { color:#8b9aa3; font-size:19px; }
+.search-input input { background:transparent; border:0; min-width:0; outline:0; padding:.55rem; width:100%; }
+.students-tools { align-items:center; background:#fbfcfc; border-top:1px solid #edf2f3; color:var(--muted); display:flex; font-size:.72rem; justify-content:space-between; padding:.7rem 1.3rem; }
+.select-all { align-items:center; color:#4d626f; cursor:pointer; display:flex; font-weight:800; gap:.4rem; }
+.select-all input,.students-table input { accent-color:var(--blue); height:17px; width:17px; }
+.students-table-wrap { border-block:1px solid #e9eff1; max-height:560px; min-height:420px; overflow:auto; }
+.students-table { border-collapse:collapse; font-size:.76rem; width:100%; }
+.students-table th { background:#f6f9fa; color:#71808a; font-size:.69rem; font-weight:900; padding:.75rem .6rem; position:sticky; text-align:start; top:0; z-index:1; }
+.students-table td { border-top:1px solid #edf1f2; color:#536773; padding:.8rem .6rem; text-align:start; vertical-align:middle; }
+.students-table tbody tr { cursor:pointer; transition:background .18s; }
+.students-table tbody tr:hover { background:#f8fcfd; }
+.students-table tbody tr.selected { background:#edf8fb; box-shadow:inset -3px 0 var(--cyan); }
+.students-table tbody tr.draggable-student { cursor:grab; }
+.students-table tbody tr.draggable-student:active { cursor:grabbing; }
+.students-table strong { color:var(--navy); display:block; font-size:.79rem; white-space:nowrap; }
+.students-table small { color:#86949c; display:block; margin-top:.15rem; }
+.check-column { text-align:center!important; width:38px; }
+.student-number { color:var(--blue); direction:ltr; display:inline-block; font-weight:900; white-space:nowrap; }
+.level-text { color:var(--navy); font-weight:800; white-space:nowrap; }
+.empty-students { align-items:center; color:#83929a; display:flex; flex-direction:column; gap:.35rem; justify-content:center; min-height:300px; text-align:center; }
+.empty-students .material-symbols-outlined { color:#73bdc9; font-size:48px; }
+.allocation-action-bar { align-items:center; background:#fbfcfc; display:flex; justify-content:space-between; min-height:70px; padding:.8rem 1.3rem; }
+.allocation-action-bar>span { color:var(--muted); font-size:.8rem; font-weight:700; }
+.allocation-action-bar>span small { color:var(--cyan); display:block; font-size:.65rem; margin-top:.2rem; }
+.allocate-button,.save-button { align-items:center; border:0; border-radius:10px; color:#fff; display:inline-flex; font-weight:900; gap:.4rem; justify-content:center; min-height:43px; }
+.allocate-button { background:var(--cyan); padding:.65rem 1.1rem; }
+.save-button { background:var(--navy); padding:.6rem 1rem; }
+.allocate-button:hover,.save-button:hover { color:#fff; filter:brightness(.9); }
+.allocate-button:disabled,.save-button:disabled { background:#afbec3; color:#fff; }
+.room-panel { padding:1.2rem; }
+.room-filter-placeholder { align-items:center; color:var(--muted); display:flex; flex-direction:column; justify-content:center; min-height:420px; padding:2rem; text-align:center; }
+.room-filter-placeholder>.material-symbols-outlined { color:var(--cyan); font-size:72px; }
+.room-filter-placeholder h3 { color:var(--navy); font-weight:900; margin:.75rem 0 .35rem; }
+.room-filter-placeholder p { margin:0; }
+.room-header { align-items:center; display:flex; gap:1rem; justify-content:space-between; margin-bottom:.9rem; }
+.room-identity,.room-header-actions { align-items:center; display:flex; gap:.7rem; }
+.room-icon { align-items:center; background:var(--navy); border-radius:12px; color:#fff; display:flex; font-size:29px; height:49px; justify-content:center; width:49px; }
+.inline-room-selector { min-width:220px; }
+.inline-room-selector label { color:var(--cyan); display:block; font-size:.68rem; font-weight:900; margin-bottom:.2rem; }
+.inline-room-selector .form-control { background:#f8fbfc; border:1px solid #d8e5e9; border-radius:9px; color:var(--navy); font-size:.76rem; font-weight:800; min-height:38px; }
+.inline-room-selector>span { color:var(--muted); display:block; font-size:.65rem; margin-top:.18rem; }
+.capacity-meter { direction:ltr; min-width:90px; text-align:right; }
+.capacity-meter strong { color:var(--navy); font-size:1.15rem; }
+.capacity-meter span { color:var(--muted); font-size:.76rem; }
+.capacity-track { background:#e6edef; border-radius:99px; height:5px; margin-top:.25rem; overflow:hidden; }
+.capacity-track i { background:var(--cyan); display:block; height:100%; }
+.teacher-card { align-items:center; background:linear-gradient(135deg,#eef8fb,#f9fcfd); border:1px solid #d7eaef; border-radius:13px; display:grid; gap:.65rem; grid-template-columns:46px 1.3fr 1fr .8fr; margin-bottom:.9rem; padding:.7rem .85rem; }
+.teacher-avatar { align-items:center; background:#fff; border:1px solid #d7e6ea; border-radius:50%; color:var(--blue); display:flex; height:42px; justify-content:center; width:42px; }
+.teacher-card div {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap:5px;
+}
+.teacher-card small { color:#70858f; display:block; font-size:.57rem; font-weight:800; }
+.teacher-card strong { color:var(--navy); display:block; font-size:.68rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.classroom-visual { margin:auto; max-width:520px; padding:.4rem; position:relative; transition:filter .18s,transform .18s; }
+.classroom-visual.drop-ready { filter:drop-shadow(0 0 12px rgba(45,170,196,.45)); transform:scale(1.01); }
+.classroom-visual.drop-unavailable { filter:grayscale(.35); }
+.classroom-drop-message { align-items:center; background:rgba(18,50,75,.9); border:3px dashed #65d4e7; border-radius:12px; color:#fff; display:flex; flex-direction:column; gap:.55rem; inset:.4rem; justify-content:center; padding:1rem; pointer-events:none; position:absolute; text-align:center; z-index:5; }
+.drop-unavailable .classroom-drop-message { background:rgba(104,71,71,.92); border-color:#efaaaa; }
+.classroom-drop-message .material-symbols-outlined { color:#7ee2f0; font-size:58px; }
+.classroom-drop-message strong { font-size:1rem; }
+.classroom-shell { background:linear-gradient(90deg,#e6e8e5,#fafbf8 7%,#fff 50%,#fafbf8 93%,#e6e8e5); border:5px solid #bcc7c4; border-radius:10px; box-shadow:inset 0 0 0 4px #f1f4f2,0 14px 28px rgba(18,50,75,.14); min-height:510px; padding:14px; position:relative; }
+.board { align-items:center; background:linear-gradient(135deg,#254d45,#163b35); border:7px solid #bd9563; box-shadow:inset 0 0 15px rgba(0,0,0,.3); color:#d9e8dc; display:flex; font-size:.6rem; font-weight:900; height:46px; justify-content:center; letter-spacing:.13em; margin:0 auto .55rem; width:78%; }
+.teacher-desk { align-items:center; background:linear-gradient(#d9ab72,#b98348); border:2px solid #956a3d; border-radius:5px; color:#fff; display:flex; gap:.35rem; justify-content:center; margin:0 auto .65rem; min-height:39px; width:42%; }
+.teacher-desk .material-symbols-outlined { font-size:18px; }
+.teacher-desk strong { font-size:.62rem; }
+.room-stats { display:grid; gap:.4rem; grid-template-columns:repeat(3,1fr); margin-bottom:.65rem; }
+.room-stats>div { align-items:center; background:#f7faf9; border:1px solid #e1e9e6; border-radius:8px; display:grid; grid-template-columns:27px 1fr; grid-template-rows:auto auto; padding:.42rem; }
+.room-stats .material-symbols-outlined { color:var(--cyan); font-size:18px; grid-row:1/3; }
+.room-stats strong { color:var(--navy); font-size:.9rem; line-height:1; }
+.room-stats small { color:var(--muted); font-size:.58rem; }
+.room-seats-grid { direction:ltr; display:grid; gap:11px 12px; grid-template-columns:repeat(4,minmax(0,1fr)); padding:.3rem .55rem 2.5rem; }
+.class-seat { align-items:center; border-radius:8px 8px 12px 12px; display:flex; flex-direction:column; height:67px; justify-content:center; min-width:0; padding:.25rem; position:relative; width:100%; }
+.class-seat:after { border-radius:0 0 5px 5px; bottom:-5px; content:""; height:7px; left:12%; position:absolute; width:76%; }
+.class-seat .material-symbols-outlined { font-size:18px; }
+.class-seat strong { direction:ltr; font-size:.59rem; line-height:1.1; margin-top:.1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; width:100%; }
+.class-seat small { font-size:.46rem; opacity:.8; }
+.seat-index { align-items:center; background:rgba(255,255,255,.86); border-radius:50%; color:#71808a; display:flex; font-size:.49rem; font-weight:900; height:16px; justify-content:center; position:absolute; right:4px; top:4px; width:16px; }
+.occupied-seat { background:linear-gradient(145deg,#1687a6,#126d8d); border:1px solid #0e6683; box-shadow:0 3px 7px rgba(19,111,143,.2); color:#fff; }
+button.occupied-seat { cursor:pointer; }
+button.occupied-seat:hover { background:linear-gradient(145deg,#e66868,#c64646); border-color:#b63838; }
+.occupied-seat:after { background:#0d5e7b; }
+.reserved-seat { background:linear-gradient(145deg,#6b8290,#536b79); border-color:#49616e; }
+.empty-seat { background:linear-gradient(145deg,#fff,#f4f8f9); border:1px dashed #b7c8cd; color:#91a2a9; }
+.empty-seat:after { background:#d7e1e4; }
+.classroom-door { align-items:center; background:#b37c43; border:3px solid #8a5e32; bottom:-5px; color:#fff; display:flex; font-size:.55rem; gap:.2rem; height:42px; justify-content:center; position:absolute; right:24px; width:75px; }
+.classroom-door .material-symbols-outlined { font-size:18px; }
+.seat-legend { color:var(--muted); display:flex; flex-wrap:wrap; font-size:.66rem; gap:1rem; justify-content:center; margin-top:1rem; }
+.seat-legend span { align-items:center; display:flex; gap:.3rem; }
+.seat-legend i { border-radius:3px; display:inline-block; height:11px; width:15px; }
+.occupied-key { background:#1687a6; }.available-key { background:#fff; border:1px dashed #aebfc4; }
+.empty-setup { align-items:center; background:#fff; border:1px solid #e1ebee; border-radius:18px; color:var(--muted); display:flex; flex-direction:column; min-height:420px; justify-content:center; text-align:center; }
+.empty-setup>.material-symbols-outlined { color:var(--cyan); font-size:72px; }.empty-setup h3 { color:var(--navy); font-weight:900; }.manage-link { background:var(--navy); color:#fff; }
+@media (max-width:1199px) { .classroom-workspace { grid-template-columns:1fr; }.room-panel { grid-row:1; }.students-panel { grid-row:2; } }
+@media (max-width:767px) { .classroom-allocation-page .p-4 { padding:.75rem!important; }.room-panel { padding:.75rem; }.room-header { align-items:stretch; flex-direction:column; }.room-header-actions { justify-content:space-between; }.filter-grid { grid-template-columns:1fr; }.teacher-card { grid-template-columns:42px 1fr; }.teacher-card div:nth-child(n+3) { grid-column:2; }.room-seats-grid { gap:9px 7px; padding-inline:0; }.class-seat { height:62px; }.students-table-wrap { min-height:340px; }.allocation-action-bar { align-items:stretch; flex-direction:column; gap:.6rem; } }

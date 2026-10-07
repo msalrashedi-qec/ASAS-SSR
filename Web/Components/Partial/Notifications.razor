@@ -1,0 +1,51 @@
+﻿
+@inject NavigationManager Navigator
+
+
+<a href="inbox" class="leads">
+    <span class="lead-icon">
+        <i class="fw-bold material-symbols-outlined @(notifications.Value > 0 ?"animate__animated animate__swing animate__infinite infinite":"")">
+            notifications
+        </i>
+    </span>
+    <div class="lead-details"><span class="count c-danger"> @notifications.Value </span></div>
+</a>
+
+
+@code {
+
+    private NumberDto<int> notifications = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetTasksCount();
+        // HubConnection _connection = new HubConnectionBuilder().WithUrl($"{Navigator.BaseUri}notificationhub").WithAutomaticReconnect().Build();
+        // await _connection.StartAsync();
+        // _connection.On<string>("role", async m =>
+        // {
+        //     await GetTasksCount();
+        // });
+        // _connection.On<string>("wf", async m =>
+        // {
+        //     await GetTasksCount();
+        // });
+       
+    }
+
+    public async Task GetTasksCount()
+    {
+        try
+        {
+            // var result = await HttpService.GetOneAsync("api/InboxWf/getActiveTasks");
+            // if (result.IsSuccess)
+            //     notifications = result.Data;
+            // StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            //_toastService.ShowError(ex.Message);
+        }
+    }
+
+}

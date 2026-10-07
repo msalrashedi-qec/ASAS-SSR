@@ -1,0 +1,189 @@
+@page "/student-contract/{StudentId:guid}"
+@attribute [Authorize(Policy = Policies.StudentContracts.View)]
+
+<PageTitle>@_localizer["StudyContract"]</PageTitle>
+
+<HeadContent>
+    <style media="print">
+        @@page {
+            size: A4 portrait;
+            margin: 0;
+        }
+    </style>
+</HeadContent>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header class="report-screen-header print-display-none">
+    <h2>@_localizer["StudyContract"]</h2>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["StudyContract"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</header>
+
+<div class="student-account-toolbar print-display-none">
+    <button type="button" class="btn btn-outline-secondary" @onclick="PrintAsync" disabled="@(contract is null)">
+        <span class="material-symbols-outlined">print</span>
+        @_localizer["Print"]
+    </button>
+    <button type="button" class="btn btn-outline-danger" @onclick="ExportPdfAsync" disabled="@(contract is null)">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        @_localizer["ExportPdf"]
+    </button>
+</div>
+
+@if (!isLoading && (student is null || contract is null))
+{
+    <div class="content-body p-4 text-center bg-light-warning">@_localizer["NotFound"]</div>
+}
+else if (student is not null && contract is not null)
+{
+    <article id="student-contract-report" class="student-contract-report" dir="rtl" lang="ar">
+        <section class="student-contract-sheet">
+            @ContractHeader()
+
+            <h1>عقد تسجيل مدرسي</h1>
+            <p>إنه في يوم <strong>@ArabicDayName</strong> الموافق <span dir="ltr">@ContractDate</span> في مدينة @CityName، تم الاتفاق بين كل من:</p>
+            <p>
+                <strong>الطرف الأول:</strong> @CompanyName، سجل تجاري رقم <span dir="ltr">(@CompanyCr)</span> وعنوانها @CompanyAddress، هاتف <span dir="ltr">@CompanyPhone</span>
+                @if (!string.IsNullOrWhiteSpace(student.School.Company.FaxNumber))
+                {
+                    <text>، فاكس <span dir="ltr">@student.School.Company.FaxNumber</span></text>
+                }
+                @if (!string.IsNullOrWhiteSpace(student.School.Company.PO))
+                {
+                    <text>، صندوق بريد <span dir="ltr">@student.School.Company.PO</span> والرمز البريدي <span dir="ltr">@student.School.Company.PoCode</span></text>
+                }
+                ، ويمثلها في هذا العقد ........................................
+            </p>
+            <p>
+                <strong>الطرف الثاني:</strong> @ParentFullName، الجنسية: @ParentNationality، رقم الهوية: <span dir="ltr">@ParentNationalId</span>، رقم الجوال: <span dir="ltr">@ParentMobile</span>، ولي أمر @(student.GenderId == 1 ? "الطالب" : "الطالبة") @StudentFullName @(student.GenderId == 1 ? "المسجل" : "المسجلة") بالمرحلة @LevelName بالصف @ClassName.
+            </p>
+
+            <h2>تمهيد</h2>
+            <p>حيث إن الطرف الأول يملك @SchoolName، وحيث إن الطرف الثاني يرغب في إلحاق @(student.GenderId == 1 ? "الطالب" : "الطالبة") @StudentFullName بالمدرسة للاستفادة من الخدمات التعليمية التي يقدمها الطرف الأول، فقد اتفق الطرفان وهما بكامل أهليتهما القانونية للتعاقد على ما يلي:</p>
+            <p><strong>أولاً:</strong> يعتبر التمهيد أعلاه جزءاً لا يتجزأ من هذا العقد.</p>
+            <p><strong>ثانياً:</strong> مدة العقد هي عن السنة الدراسية <strong>@AcademicYear</strong>.</p>
+
+            <h3><strong>ثالثاً:</strong> البيانات الشخصية @(student.GenderId == 1 ? "الطالب" : "الطالبة")</h3>
+            <table class="student-contract-table">
+                <thead><tr><th>الاسم</th><th>رقم الهوية</th><th>الجنسية</th><th>تاريخ الميلاد</th><th>المرحلة</th><th>الصف</th></tr></thead>
+                <tbody><tr><td>@StudentFullName</td><td dir="ltr">@student.NationalID</td><td>@StudentNationality</td><td dir="ltr">@ReportFormatter.Date(student.BirthDate)</td><td>@LevelName</td><td>@ClassName</td></tr></tbody>
+            </table>
+
+            <h3><strong>رابعاً:</strong> بيانات ولي الأمر</h3>
+            <table class="student-contract-table">
+                <thead><tr><th>الاسم</th><th>الجنسية</th><th>عنوان السكن</th><th>رقم الجوال</th></tr></thead>
+                <tbody><tr><td>@ParentFullName</td><td>@ParentNationality</td><td>@ValueOrBlank(student.Parent.HomeAddress)</td><td dir="ltr">@ParentMobile</td></tr></tbody>
+                <thead><tr><th>رقم الهوية</th><th>تاريخ انتهاء الهوية</th><th>مصدرها</th><th>المهنة</th></tr></thead>
+                <tbody><tr><td dir="ltr">@ParentNationalId</td><td dir="ltr">@ReportFormatter.Date(student.Parent.NationalIDExpiryDate)</td><td>@ValueOrBlank(student.Parent.NationalIDIssuedFrom)</td><td>@ValueOrBlank(student.Parent.Occupation)</td></tr></tbody>
+            </table>
+
+            <h3><strong>خامساً:</strong> وسائل التواصل</h3>
+            <table class="student-contract-table">
+                <thead><tr><th>هاتف المنزل</th><th>هاتف عمل ولي الأمر</th><th>البريد الإلكتروني</th><th>شخص آخر للتواصل معه</th><th>رقم جوال الشخص</th></tr></thead>
+                <tbody><tr><td dir="ltr">@ValueOrBlank(student.HomePhone ?? student.Parent.HomePhone)</td><td dir="ltr">@ValueOrBlank(student.Parent.WorkPhone)</td><td dir="ltr">@ValueOrBlank(student.Parent.Email)</td><td>@ValueOrBlank(student.ContactPerson)</td><td dir="ltr">@ValueOrBlank(student.ContactMobile)</td></tr></tbody>
+            </table>
+
+            <h3><strong>سادساً:</strong> التزامات الطرفين</h3>
+            <p>بموجب هذا العقد يلتزم الطرف الأول بتقديم الخدمة التعليمية وفق النماذج والأنظمة المقررة في مدرسته @(student.GenderId == 1 ? "للطالب" : "للطالبة") @StudentFullName، كما يلتزم الطرف الثاني بسداد الرسوم المستحقة على @(student.GenderId == 1 ? "الطالب" : "الطالبة") وفقاً للسياسة المعتمدة للمدرسة.</p>
+            @ContractFooter("1")
+        </section>
+
+        <section class="student-contract-sheet">
+            @ContractHeader()
+
+            <h3><strong>سابعاً:</strong> الرسوم الدراسية</h3>
+            @if (contract.Details.Count > 0)
+            {
+                <table class="student-contract-table fees-table">
+                    <thead><tr><th>الخدمة</th><th>الفصل الدراسي</th><th>المبلغ (ريال)</th></tr></thead>
+                    <tbody>
+                        @foreach (var detail in contract.Details.OrderBy(x => x.SemesterId).ThenByDescending(x => x.Amount))
+                        {
+                            <tr class="@(detail.Amount < 0 ? "bg-light-warning" : "" )"><td>@detail.Comments</td><td>@Localized(detail.Semester.Name, detail.Semester.NameAr)</td><td dir="ltr">@ReportFormatter.Amount(detail.Amount)</td></tr>
+                        }
+                    </tbody>
+                    <tfoot><tr><th colspan="2">إجمالي الرسوم</th><th dir="ltr">@ReportFormatter.Amount(ContractTotal)</th></tr></tfoot>
+                </table>
+            }
+            <p>
+    يمكن سداد الرسوم نقداً أو بشيك محرر باسم/ <strong>@(student?.School.ChequePayeeName)</strong>
+    أو بالتحويل إلى الحساب البنكي المعتمد لدى الشركة
+    @if (!string.IsNullOrEmpty(student?.School.BankName))
+    {
+        <text> في <strong>@student.School.BankName</strong> رقم (<strong>@student.School.IBAN</strong>)</text>
+    }،
+    مع تسليم إشعار الإيداع لتحرير سند القبض.
+</p>
+
+            <h3><strong>ثامناً:</strong> سياسة تحصيل الرسوم</h3>
+            <ol>
+                <li>القسط الأول ونسبته 70% من إجمالي الرسوم، ويسدد كاملاً عند التسجيل، ولا يعتبر الطالب مسجلاً إلا بعد سداد كامل القسط الأول.</li>
+                <li>القسط الثاني ونسبته 30% من إجمالي الرسوم، ويسدد كاملاً بعد شهر من تاريخ التسجيل.</li>
+                <li>في حال عدم الالتزام بالبندين السابقين يحق للطرف الأول طلب توقيع سند لأمر.</li>
+                <li>رسوم الكتب الإضافية والزي المدرسي الإضافي والمواصلات والأنشطة والاشتراكات تسدد كاملة قبل تقديم الخدمة.</li>
+            </ol>
+
+            <h3><strong>تاسعاً:</strong> سياسة الخصومات</h3>
+            <ol>
+                <li>خصم الإخوة بنسبة 10% من إجمالي الرسوم الدراسية، ويستحق للأبناء بعد الأول ويمنح للمرحلة الأقل.</li>
+                <li>خصم السداد الفوري بنسبة 10% عند سداد كامل الرسوم خلال الشهر الأول من التسجيل.</li>
+                <li>خصم أبناء العاملين بنسبة 20% من إجمالي الرسوم، وفق الضوابط المعتمدة.</li>
+            </ol>
+
+            <h3><strong>عاشراً:</strong> سياسة التسجيل في المدارس</h3>
+            <ol>
+                <li>يعتبر انتظام الطالب/ة المسجل في السنة السابقة خلال الأسبوع الأول موافقة من ولي الأمر على استمراره في السنة الجديدة بالشروط الواردة في هذا العقد وما يستجد من شروط يتم الإخطار بها حسب النظام.</li>
+                <li>عند التسجيل بعد بداية العام الدراسي تحصل الرسوم بنسبة ما تبقى من العام: كامل الرسوم خلال الشهر الأول، و75% من رسوم الفصل عند التسجيل في الشهر الثاني، و50% بعد مرور شهرين، مع استحقاق كامل رسوم الفصول اللاحقة.</li>
+            </ol>
+
+            <h3><strong>حادي عشر:</strong> سياسة الانسحاب من المدرسة</h3>
+            <ol>
+                <li>يقدم طلب الانسحاب على النموذج المعتمد قبل بداية الفصل الدراسي بمدة لا تقل عن عشرة أيام.</li>
+                <li>عند الانسحاب خلال الأسبوع الأول من تاريخ التسجيل يخصم مبلغ 1,000 ريال.</li>
+                <li>عند الانسحاب خلال الأسبوع الثاني يخصم 10% من كامل رسوم الفصل بالإضافة إلى 1,000 ريال.</li>
+                <li>عند الانسحاب خلال الأسبوع الثالث يخصم 20% من كامل رسوم الفصل بالإضافة إلى 1,000 ريال.</li>
+                <li>بعد الأسبوع الثالث يخصم كامل رسوم الفصل بالإضافة إلى 1,000 ريال.</li>
+            </ol>
+
+            <h3><strong>ثاني عشر:</strong> سياسة الاشتراك بالخدمات</h3>
+            <ul>
+                <li>المواصلات: تعبئة النموذج الخاص وسداد كامل الرسوم قبل بدء الخدمة بحسب منطقة السكن.</li>
+                <li>الزي والكتب الإضافية: تعبئة النموذج الخاص وسداد كامل الرسوم قبل التسليم.</li>
+                <li>الرحلات والأنشطة: تعبئة النموذج الخاص وسداد كامل الرسوم قبل بدء الخدمة.</li>
+            </ul>
+            @ContractFooter("2")
+        </section>
+
+        <section class="student-contract-sheet">
+            @ContractHeader()
+            <h3><strong>ثالث عشر:</strong> الإخطارات</h3>
+            <p>يتم إخطار ولي أمر @(student.GenderId == 1 ? "الطالب" : "الطالبة") بأي مستحقات مالية أو تعديل في الرسوم أو ملاحظات أو أمور أخرى تتعلق بوضع @(student.GenderId == 1 ? "الطالب" : "الطالبة") في المدرسة عن طريق أحد الوسائل التالية:</p>
+            <ol>
+                <li>- خطاب رسمي موجه من إدارة المدرسة يسلم للطالب، ويعتبر ما ورد بالإخطار صحيحاً ولا اعتراض عليه إن لم يرد الطرف الثاني خلال ثلاثة أيام.</li>
+                <li>- الإرسال إلى رقم الفاكس المزود من ولي الأمر.</li>
+                <li>- البريد الإلكتروني المزود من ولي الأمر.</li>
+                <li>- رسالة نصية على جوال ولي الأمر.</li>
+            </ol>
+
+            <h3><strong>رابع عشر:</strong> تعهد ولي الأمر</h3>
+            <p>أنا ولي أمر @(student.GenderId == 1 ? "الطالب" : "الطالبة") <strong>@StudentFullName</strong> أتعهد بأن جميع البيانات أعلاه صحيحة ومطابقة للواقع، كما أتعهد بمراجعة المدرسة باستمرار لمتابعة سير @(student.GenderId == 1 ? "الطالب" : "الطالبة")، والاطلاع والتوقيع على التعهدات والشروط واللوائح المستجدة ونماذج الاشتراك وسندات الأمر.</p>
+            <p>الاسم: @ParentFullName - رقم الهوية: <span dir="ltr">@ParentNationalId</span> - رقم الجوال: <span dir="ltr">@ParentMobile</span></p>
+            <p class="signature-line">التوقيع: ................................................................................</p>
+            <p class="acceptance-line">إدارة القبول والتسجيل: ................................................................................................................</p>
+
+            <div class="contract-signatures">
+                <div><strong>الطرف الأول</strong><span>ويمثله:</span><span class="signature-space"></span></div>
+                <div><strong>الطرف الثاني</strong><span>@ParentFullName</span><span class="signature-space"></span></div>
+            </div>
+            @ContractFooter("3")
+        </section>
+    </article>
+}

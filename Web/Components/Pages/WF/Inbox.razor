@@ -1,0 +1,147 @@
+﻿@page "/inbox"
+@attribute [Authorize]
+
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <div class="p-2 d-flex justify-content-between align-items-center w-100">
+        <h4>
+            @_localizer["RequestsList"]
+        </h4>
+        
+    </div>
+</header>
+<div class="p-2">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["RequestsList"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</div>
+<div class="content-body">
+    <div class="card m-2">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            @_localizer["Search"]
+            <AuthorizeView Policy="@Policies.Requests.Submit">
+            <a class="btn btn-primary" href="discount-request">
+                <span class="material-symbols-outlined align-middle me-1">add</span>
+                @_localizer["NewRequest"]
+            </a>
+        </AuthorizeView>
+        </div>
+        <div class="card-body">
+            <EditForm Model="search" OnSubmit="Search">
+                <div class="row">
+
+                    <div class="col-md-2 p-2">
+                        <InputText @bind-Value=@search.RefNo placeholder="@_localizer["ProcessId"]" class="form-control"></InputText>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        <RadzenDropDown @bind-Value=@search.Types Data=@types TextProperty="Name" ValueProperty="Id"
+                                        Multiple=true Placeholder="@_localizer["Type"]" Chips=true class="form-control" />
+                    </div>
+                    <div class="col-md-2 p-2">
+                        <RadzenDropDown @bind-Value=@search.Projects Data=@organizations TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                        Multiple=true Placeholder="@_localizer["School"]" Chips=true class="form-control" />
+                    </div>
+                    <div class="col-md-2 p-2">
+                        <RadzenDropDown @bind-Value=@search.Statuses Data=@statuses TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                        Multiple=true Placeholder="@_localizer["Status"]" Chips=true class="form-control" />
+                    </div>
+                    <div class="col-md-1 p-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            @_localizer["Search"]
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+    @if (!isLoading)
+    {
+        <div class="p-3">
+            <div class="row bg-body-tertiary" style="font-size:small;">
+                <div class="col-4">
+                    @_localizer["PageNo"]
+                    <select class="pagination-select" @bind-value="PageIndex" @onchange="GetListAsync" @bind-value:event="oninput">
+                        @for (int i = 1; i <= TotalPages; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-4 text-center">
+                    @_localizer["RowsCount"] : @totalRows
+                </div>
+                <div class="col-4 align-content-end">
+                    @_localizer["RowsPerPage"]
+                    <select class="pagination-select" @bind-value="PageSize" @onchange="GetListAsync" @bind-value:event="oninput">
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-auto">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(1)" @onclick:stopPropagation value="@_localizer["ProcessId"]" /></th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(2)" @onclick:stopPropagation value="@_localizer["Type"]" /></th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(3)" @onclick:stopPropagation value="@_localizer["School"]" /></th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(7)" @onclick:stopPropagation value="@_localizer["Requester"]" /></th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(4)" @onclick:stopPropagation value="@_localizer["CurrentTask"]" /></th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(5)" @onclick:stopPropagation value="@_localizer["ReceivedOn"]" /></th>
+                            <th><input type="button" class="btn font-weight-bold" @onclick="() => SortData(6)" @onclick:stopPropagation value="@_localizer["Status"]" /></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = PageSize * (PageIndex - 1) + 1;
+                            if (workflows != null)
+                            {
+                                foreach (var wf in workflows)
+                                {
+                                    <tr class="@(wf.StatusId == 2 && wf.StartDate.AddDays(wf.RequiredDays) < DateTime.UtcNow.GetKsaDateTime() ? "c-red" : null)">
+                                        <td>@index</td>
+                                        <td>
+                                            <a href="wfprocess-details/@wf.Id/@wf.WfProcessId">
+                                                @wf.RefNo
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @(IsArabic ? wf.TypeNameAr : wf.TypeName)
+                                        </td>
+                                        <td>
+                                            @(IsArabic ? wf.SchoolNameAr : wf.SchoolName)
+                                        </td>
+                                        <td>
+                                            @wf.RequesterName
+                                        </td>
+                                        <td>
+                                            @(IsArabic ? wf.TaskNameAr : wf.TaskName)
+                                        </td>
+                                        <td>
+                                            @wf.StartDate.ToString("dd/MM/yyyy hh:mm tt")
+                                        </td>
+                                        <td>
+                                            <span class="tag" style="background-color:@wf.ColorCode">
+                                                @(IsArabic ? wf.StatusNameAr : wf.StatusName)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

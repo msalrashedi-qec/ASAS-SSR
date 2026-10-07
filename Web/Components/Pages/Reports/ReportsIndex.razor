@@ -1,0 +1,28 @@
+@page "/reports"
+@attribute [Authorize]
+
+<PageTitle>التقارير</PageTitle>
+
+<header class="report-screen-header">
+    <h2>التقارير</h2>
+</header>
+<RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="التقارير" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+<main class="reports-index" dir="rtl">
+    <section class="reports-index-grid">
+        @foreach (var report in reports)
+        {
+            <a class="reports-index-card" href="@($"reports/{report.Url}")">
+                <span class="reports-index-icon">@(index++)</span>
+                <span><strong>@report.NameAr</strong><small>@report.Description</small></span>
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+        }
+    </section>
+</main>
+
+

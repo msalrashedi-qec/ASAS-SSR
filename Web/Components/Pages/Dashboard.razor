@@ -1,0 +1,189 @@
+@page "/dashboard"
+@implements IAsyncDisposable
+@attribute [Authorize(Policy = Policies.Reports.View)]
+<PageTitle>لوحة البيانات | أساس</PageTitle>
+<div class="dashboard" dir="rtl">
+  
+    <div class="dash-toolbar">
+        <div>
+            <h2>لوحة الأداء</h2>
+            <span class="muted">@(updated == default ? "بيانات مباشرة من النظام" : $"آخر تحديث {updated:yyyy/MM/dd · HH:mm}")</span></div>
+                 <div class="hero-tags"><span style="font-weight:bold;"><i class="material-symbols-outlined">calendar_month</i> العام الدراسي @yearName</span></div>
+        <div class="dash-actions">
+            <label for="dashboard-school">المدرسة</label>
+            <select id="dashboard-school" @bind="selectedSchool" @bind:after="InvalidateCharts" disabled="@loading">
+                <option value="">جميع المدارس</option>
+                @foreach (var school in schools) 
+                { 
+                    <option value="@school.Id">@school.Name</option>
+                }
+                </select>
+                <button @onclick="LoadAsync" disabled="@loading">
+                    <i class="material-symbols-outlined">refresh</i> تحديث
+                    </button>
+                </div>
+    </div>
+    @if (loading)
+    {
+        <div class="dash-state" role="status">
+            <span class="loading-orbit"></span>
+            <h3>جارٍ إعداد البيانات للعرض</h3>
+            <p>تحميل بيانات الطلاب والحسابات المالية…</p>
+        </div>
+    }
+    else if (error is not null)
+    {
+        <div class="dash-state" role="alert">
+            <i class="material-symbols-outlined">cloud_off</i>
+            <h3>@error</h3>
+            <button @onclick="LoadAsync">إعادة المحاولة</button>
+        </div>
+    }
+    else if (!schools.Any())
+    {
+        <div class="dash-state"><h3>لا توجد مدارس متاحة للعرض</h3></div>
+    }
+    else
+    {
+
+        <section class="metric-grid" aria-label="مؤشرات الأداء">
+            <article class="metric-card metric-cases">
+                <div class="metric-top"><span class="metric-icon material-symbols-outlined">groups</span><span class="metric-trend">@Visible.Count() مدارس ضمن العرض الحالي</span></div>
+                <strong>@Visible.Sum(x => x.Students).ToString("N0")</strong>
+                <span>إجمالي الطلاب</span>
+            </article>
+            <article class="metric-card metric-consultations">
+                <div class="metric-top"><span class="metric-icon material-symbols-outlined">school</span><span class="metric-trend">مستجد + منتظم</span></div>
+                <strong>@Visible.Sum(x => x.Active).ToString("N0")</strong>
+                <span>الطلاب النشطون</span>
+            </article>
+            <article class="metric-card metric-value">
+                <div class="metric-top"><span class="metric-icon material-symbols-outlined">account_balance_wallet</span><span class="metric-trend">الرصيد السابق والحالي بعد خصم المسترد</span></div>
+                <strong>@Money(Total(x => x.TotalPaid))</strong><span>صافي المسدد</span>
+            </article>
+            <article class="metric-card metric-sessions">
+                <div class="metric-top"><span class="metric-icon material-symbols-outlined">pending_actions</span><span class="metric-trend">الرصيد المتبقي وفق السجل المالي</span></div>
+                <strong class="amount-value">@Money(Total(x => x.Remaining))</strong><span>إجمالي غير المسدد</span>
+            </article>
+        </section>
+
+    <section class="insight-strip">
+        <div>
+            <i class="material-symbols-outlined">donut_large</i>
+            <span>نسبة التحصيل<strong>@Rate.ToString("N1")%</strong></span>
+        </div>
+        <div>
+            <i class="material-symbols-outlined">sell</i>
+            <span>إجمالي الخصومات والتسويات<strong>@Money(Total(x => x.Discount + x.PreviousDiscount)) <small>ر.س</small></strong></span>
+        </div>
+        <div>
+            <i class="material-symbols-outlined">receipt_long</i>
+            <span>صافي المبلغ المطلوب قبل السداد<strong>@Money(Total(x => x.TotalPaid + x.Remaining)) <small>ر.س</small></strong></span>
+        </div>
+        </section>
+
+    <section class="chart-card finance">
+        <div class="section-title">
+            <div>
+                <h2>الحركة المالية للمدارس</h2>
+            </div>
+            <span class="pill">@Visible.Count() مدارس</span>
+        </div>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="الحركة المالية للمدارس؛ يمكن تمرير الجدول أفقياً">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">المدرسة</th>
+                        <th scope="col">إجمالي الرصيد السابق</th>
+                        <th scope="col">مستحقات السنة الحالية</th>
+                        <th scope="col">خصم الرصيد السابق</th>
+                        <th scope="col">المسدد من الرصيد السابق</th>
+                        <th scope="col">خصومات مستحقات السنة الحالية</th>
+                        <th scope="col">المسدد من مستحقات السنة الحالية</th>
+                        <th scope="col">صافي المسدد</th>
+                        <th scope="col">إجمالي غير المسدد</th>
+                    </tr>
+                    </thead>
+                <tbody>
+                    @foreach (var school in Visible.OrderBy(x=> x.Code))
+                    {
+                        var f = school.Finance;
+                        <tr>
+                            <th>@school.Name</th>
+                                <td>@Money(f.Previous)</td>
+                                <td>@Money(f.Dues)</td>
+                                <td>@Money(f.PreviousDiscount)</td>
+                                <td>@Money(f.PreviousPaid)</td>
+                                <td>@Money(f.Discount)</td>
+                                <td>@Money(f.Paid)</td>
+                                <td class="paid">@Money(f.TotalPaid)</td>
+                                <td class="remaining">@Money(f.Remaining)</td>
+                            </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row">الإجمالي</th>
+                        <td>@Money(Total(x => x.Previous))</td>
+                        <td>@Money(Total(x => x.Dues))</td>
+                        <td>@Money(Total(x => x.PreviousDiscount))</td>
+                        <td>@Money(Total(x => x.PreviousPaid))</td>
+                        <td>@Money(Total(x => x.Discount))</td>
+                        <td>@Money(Total(x => x.Paid))</td>
+                        <td>@Money(Total(x => x.TotalPaid))</td>
+                        <td>@Money(Total(x => x.Remaining))</td>
+                    </tr>
+                    </tfoot>
+            </table>
+        </div>
+        <div class="finance-notes">
+            <i class="material-symbols-outlined">info</i>
+            <p>المستحقات تشمل الضريبة وسحب المستحقات. الخصومات تشمل التسويات وعكس الخصم. المسدد بعد خصم المردودات، والقيمة السالبة في المتبقي تمثل رصيداً دائناً.</p>
+        </div>
+    </section>
+
+        <section class="chart-card">
+            <div class="section-title">
+                <div>
+                    <h2>توزيع الطلاب حسب الحالة</h2>
+                </div>
+                <span class="pill">@yearName</span>
+            </div>
+            @if (!statusOptions.Any()) 
+            { 
+                <p class="empty-chart">لا توجد حالات طلاب معرفة في النظام.</p> 
+            }
+            else
+            {
+                <div id="dashboard-status" dir="ltr" style="min-height:340px"></div>
+            }
+        </section>
+        
+        <section class="chart-card">
+                <div class="section-title">
+                <div>
+                    <h2>التحصيل الشهري</h2>
+                </div>
+                <i class="material-symbols-outlined section-icon">show_chart</i>
+            </div>
+                @if (!Visible.Any(x => x.Collection.Count > 0))
+                {
+                    <p class="empty-chart">لا توجد سندات قبض للسنة الحالية حتى اليوم.</p>
+                }
+                else
+                {
+                <div id="dashboard-collection" dir="ltr" style="min-height:340px"></div>
+                }
+            </section>
+            <section class="chart-card">
+                <div class="section-title">
+                    <div>
+                        <h2>مؤشر أعداد الطلاب</h2>
+                </div>
+                <i class="material-symbols-outlined section-icon">show_chart</i>
+            </div>
+                <div id="dashboard-activity" dir="ltr" style="min-height:340px"></div>
+            </section>
+    }
+</div>
+

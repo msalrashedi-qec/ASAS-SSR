@@ -1,0 +1,38 @@
+﻿@if (isProcessing)
+{
+    <Skeleton></Skeleton>
+}
+else
+{
+    <table class="w-100">
+        @if(tasks != null)
+        {
+            foreach (var item in tasks)
+            {
+                <tr style="border-bottom: 1px solid #000; color:@item.ColorCode;text-decoration: @(item.StatusId > 2 ? "line-through":"");">
+                    <td class="p-2">
+                        <div style="border-color: @item.ColorCode !important;border-style: solid;height: 23px;width: 23px;border-width: 7px !important;border-radius: 50%;"></div>
+                    </td>
+                    <td>@item.TaskName</td>
+                    <td>
+                        @if (item.StatusId == 2)
+                        {
+                            foreach (var responsible in item.Responsibles)
+                            {
+                                <div class="p-1">
+                                    @responsible.Name
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            @item.RoleName
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+    
+}
+

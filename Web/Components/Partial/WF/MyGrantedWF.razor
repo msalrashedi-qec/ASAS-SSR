@@ -1,0 +1,48 @@
+﻿
+<button class="btn btn-info shadow" data-bs-toggle="modal" data-bs-target="#WfModal" @onclick=GetList >@_localizer["NewRequest"]</button>
+
+<div class="modal fade" id="WfModal" tabindex="-1" aria-labelledby="WfModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="WfModalLabel"> @_localizer["RequestsTypes"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isLoading)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body">
+                @if (permittedRequests != null && permittedRequests.Any())
+                {
+                    int index = 1;
+                    <table class="table table-striped table-bordered" style="border:none;">
+                        @foreach (var item in permittedRequests)
+                        {
+                            <tr class="navbutton pointer" @onclick="()=>NavigateTo(item.Url)" data-bs-dismiss="modal">
+                                <td class="text-center">@index</td>
+                                <td class="justify-text">
+                                    @item.Name
+                                </td>
+                                <td class="text-center">
+                                    <span class="material-symbols-outlined icon c-black">
+                                        @item.Icon
+                                    </span>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    </table>
+                }
+                else if (!isLoading)
+                {
+                    <div class="card text-center">@_localizer["NoData"]</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+

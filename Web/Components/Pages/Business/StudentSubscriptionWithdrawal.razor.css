@@ -1,0 +1,28 @@
+.withdrawal-page { display: grid; gap: 1.25rem; padding: 1.5rem; }
+.withdrawal-student-summary { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; border: 1px solid rgba(78,117,143,.15); border-radius: 18px; background: linear-gradient(135deg,rgba(78,117,143,.1),#fff 52%,rgba(232,137,71,.09)); box-shadow: 0 8px 28px rgba(31,55,75,.08); }
+.withdrawal-avatar { display: grid; width: 58px; height: 58px; place-items: center; border-radius: 18px; color: #fff; background: var(--primary-gradient); }
+.withdrawal-avatar .material-symbols-outlined { font-size: 30px; }
+.withdrawal-student-summary h3 { margin: .15rem 0 .35rem; font-size: 1.2rem; }
+.withdrawal-meta { display: flex; flex-wrap: wrap; gap: .5rem; }
+.withdrawal-meta span { padding: .25rem .65rem; border-radius: 999px; background: rgba(78,117,143,.09); font-size: .83rem; }
+.withdrawal-card { overflow: hidden; border: 1px solid rgba(78,117,143,.14); border-radius: 18px; background: #fff; box-shadow: 0 8px 28px rgba(31,55,75,.06); }
+.withdrawal-card-heading { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(78,117,143,.12); background: linear-gradient(to bottom,#fff,rgba(78,117,143,.035)); }
+.withdrawal-card-heading > div { display: flex; align-items: center; gap: .75rem; }
+.withdrawal-card-heading > div > .material-symbols-outlined { padding: .55rem; border-radius: 12px; color: #b95e23; background: rgba(232,137,71,.12); }
+.withdrawal-card-heading h3 { margin: 0; font-size: 1.05rem; }
+.withdrawal-card-heading p { margin: .18rem 0 0; color: #73808a; font-size: .82rem; }
+.withdrawal-count { min-width: 34px; padding: .3rem .55rem; border-radius: 999px; color: #9a4d1b; background: #fff0e5; text-align: center; font-weight: 700; }
+.withdrawal-table { margin: 0; }
+.withdrawal-table th { white-space: nowrap; color: #526575; font-size: .82rem; }
+.withdrawal-table .service-name { min-width: 210px; text-align: start; font-weight: 600; }
+.withdrawal-table .money { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.date-cell { min-width: 175px; }
+.penalty-cell small { display: block; max-width: 150px; color: #846149; white-space: normal; }
+.withdraw-btn { display: inline-flex; align-items: center; gap: .3rem; padding: .5rem .8rem; border: 0; border-radius: 9px; color: #fff; background: #c7672b; white-space: nowrap; }
+.withdraw-btn:disabled { cursor: not-allowed; opacity: .5; }
+.withdraw-btn .material-symbols-outlined { font-size: 18px; }
+.withdrawal-empty { display: grid; min-height: 230px; place-items: center; align-content: center; gap: .5rem; color: #7a8790; text-align: center; }
+.withdrawal-empty.compact { min-height: 125px; }
+.withdrawal-empty .material-symbols-outlined { font-size: 42px; color: #9aa8b2; }
+.withdrawal-empty p { margin: 0; }
+@media (max-width: 767px) { .withdrawal-page { padding: .75rem; } .withdrawal-student-summary { align-items: flex-start; padding: 1rem; } .withdrawal-card-heading p { display: none; } }

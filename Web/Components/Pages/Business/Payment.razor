@@ -1,0 +1,334 @@
+@page "/payment/{ParentId:guid}"
+@page "/payment/{ParentId:guid}/{ReceiptId:guid}"
+@attribute [Authorize]
+
+<PageTitle>سداد المستحقات</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header class="print-display-none">
+    <h2>سداد المستحقات</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="سداد المستحقات" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+@if (!isLoading && parent is null)
+{
+    <div class="content-body p-4 text-center bg-light-warning">لم يتم العثور على ولي الأمر.</div>
+}
+else if (savedReceipt is not null)
+{
+    <div class="payment-actions print-display-none">
+        <button type="button" class="btn btn-outline-secondary" @onclick="PrintAsync">
+            <span class="material-symbols-outlined">print</span>
+            @_localizer["Print"]
+        </button>
+        @if (ReceiptId.HasValue)
+        {
+            <AuthorizeView Policy="@Policies.DebitReceipts.Edit">
+                <Authorized>
+                    <a class="btn btn-outline-primary" href="receipt-edit/@ParentId/@ReceiptId.Value"><span class="material-symbols-outlined">edit</span> تعديل السند</a>
+                </Authorized>
+            </AuthorizeView>
+            <a class="btn btn-light" href="parent-receipts/@ParentId">العودة للسندات</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-primary" @onclick="StartAnotherPayment">
+                <span class="material-symbols-outlined">add_card</span> سند جديد
+            </button>
+            <a class="btn btn-light" href="index">العودة للرئيسية</a>
+        }
+    </div>
+
+    <article id="payment-receipt" class="payment-receipt">
+        <div class="receipt-frame-corner receipt-frame-corner-start"></div>
+        <div class="receipt-frame-corner receipt-frame-corner-end"></div>
+
+        <div class="receipt-letterhead">
+            <div class="receipt-organization-logo">
+                @if (!string.IsNullOrWhiteSpace(school?.Logo))
+                {
+                    <img src="@Assets[$"uploads/schools/{school.Logo}"]" alt="@SchoolName" />
+                }
+            </div>
+
+            <div class="receipt-heading">
+                
+                <strong class="receipt-number" dir="ltr">@savedReceipt.Number.ToString("D6")</strong>
+                <h1>سند قبض</h1>
+                <em>RECEIPT VOUCHER</em>
+            </div>
+
+            <div class="receipt-organization-logo company-logo">
+                @if (!string.IsNullOrWhiteSpace(school?.Company?.Logo))
+                {
+                    <img src="@Assets[$"uploads/companies/{school.Company.Logo}"]" alt="@CompanyName" />
+                }
+            </div>
+        </div>
+
+        <div class="receipt-date">
+            <span>التاريخ</span>
+            <strong dir="ltr">@ReportFormatter.Date(savedReceipt.Date)</strong>
+        </div>
+
+        <section class="receipt-total">
+            <span>إجمالي المبلغ </span>
+            <strong dir="ltr">@ReportFormatter.Amount(savedReceipt.Total)</strong>
+            <img class="receipt-riyal-symbol" src="@Assets["images/icons/Saudi_Riyal_Symbol.svg"]" alt="ريال سعودي" />
+        </section>
+
+        <section class="receipt-statement">
+            <p><span>استلمنا من @(_localizer["SelectedLanguage"] == "ar" ? parent!.TitleAr : parent!.Title):</span><strong>@parent!.Name</strong></p>
+            <p><span>مبلغاً وقدره:</span><strong>@ReceiptAmountInWords</strong></p>
+            @if(selectedStudent is not null)
+            {
+                <p>
+                    <span>وذلك دفعة من حساب @(selectedStudent.GenderId == 2 ? "الطالبة" : "الطالب"):</span><strong> @savedReceipt.StudentName </strong> <span>في الصف ( @savedReceipt.ClassName ) @savedReceipt.LevelName .</span>
+                </p>
+            }
+            
+        </section>
+
+        <section class="receipt-payment-method">
+            <div>
+                <span>طريقة الدفع</span>
+                <strong>@savedReceipt.PaymentMethod</strong>
+            </div>
+            @if (savedReceipt.IsCheque)
+            {
+                <div><span>رقم الشيك</span><strong dir="ltr">@savedReceipt.ChequeNo</strong></div>
+                <div><span>البنك</span><strong>@savedReceipt.BankName</strong></div>
+                <div><span>تاريخ الشيك</span><strong dir="ltr">@ReportFormatter.Date(savedReceipt.ChequeDate!.Value)</strong></div>
+            }
+            
+        </section>
+
+        <section class="receipt-signatures">
+            <div><span>أمين الصندوق</span><strong>........................</strong></div>
+            <div><span>المحاسب</span><strong>........................</strong></div>
+            <div><span>مدير الحسابات</span><strong>........................</strong></div>
+            <div><span>المدير المالي</span><strong>........................</strong></div>
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(ReceiptFooterImage))
+        {
+            <img class="receipt-footer-image" src="@Assets[$"uploads/companies/{ReceiptFooterImage}"]" alt="بيانات المدرسة" />
+        }
+        else
+        {
+            <footer class="receipt-text-footer">
+                <strong>@CompanyName</strong>
+                <span>@school?.Company?.Address</span>
+                <span dir="ltr">@school?.Company?.PhoneNumber</span>
+            </footer>
+        }
+    </article>
+}
+else if (parent is not null)
+{
+    <div class="content-body payment-page print-display-none">
+        <fieldset disabled="@isSaving" style="border:0; padding:0; margin:0; min-width:0;">
+        <section class="payment-section">
+            <div class="payment-section-title">
+                <span class="material-symbols-outlined">family_restroom</span>
+                <div>
+                    <h3>طلاب ولي الأمر</h3>
+                    <p>@parent.Name — اختر الطالب المراد السداد عنه</p>
+                </div>
+            </div>
+
+            @if (students.Count == 0)
+            {
+                <div class="payment-empty">لا يوجد طلاب تابعون لولي الأمر في المدرسة الحالية.</div>
+            }
+            else
+            {
+                <div class="student-payment-cards">
+                    @foreach (var item in students)
+                    {
+                        <button type="button" class="student-payment-card @(selectedStudentId == item.Id ? "selected" : null)"
+                                disabled="@isSaving" @onclick="() => SelectStudentAsync(item.Id)">
+                            <span class="student-avatar">@Initials(item.Name)</span>
+                            <span class="student-card-info">
+                                <strong>@item.Name</strong>
+                                <small dir="ltr">@item.Code</small>
+                            </span>
+                            <span class="student-due">
+                                <small>إجمالي المستحق</small>
+                                <strong dir="ltr">@ReportFormatter.Amount(item.TotalDue)</strong>
+                            </span>
+                            <span class="material-symbols-outlined card-check">check_circle</span>
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+
+        @if (selectedStudent is not null)
+        {
+            <section class="payment-section">
+                <div class="payment-section-title">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <div><h3>تفاصيل السند</h3><p>بيانات السداد الأساسية</p></div>
+                </div>
+
+                <div class="row payment-form-grid">
+                    <div class="col-md-6">
+                        <label>الطالب</label>
+                        <div class="student-readonly">
+                            <strong>@selectedStudent.Name</strong>
+                            <span dir="ltr">@selectedStudent.Code</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label>تاريخ السند <span>*</span></label>
+                        <RadzenDatePicker @bind-Value="receiptDate" Change="@(_ => RefreshDiscountPreviewAsync())" DateFormat="dd/MM/yyyy" Style="width:100%" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>طريقة الدفع <span>*</span></label>
+                        <RadzenDropDown TValue="byte" @bind-Value="paymentMethodId" Data="paymentMethods"
+                                        TextProperty="DisplayName" ValueProperty="Id" Change="PaymentMethodChanged"
+                                        Placeholder="اختر طريقة الدفع" Style="width:100%" />
+                    </div>
+
+                    @if (IsCheque)
+                    {
+                        <div class="col-md-4 cheque-field">
+                            <label>اسم البنك <span>*</span></label>
+                            <RadzenDropDown TValue="string" @bind-Value="bankName" Data="banks" TextProperty="DisplayName" ValueProperty="DisplayName"
+                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            Placeholder="اختر البنك" Style="width:100%" />
+                        </div>
+                        <div class="col-md-4 cheque-field">
+                            <label>رقم الشيك <span>*</span></label>
+                            <InputText class="form-control" @bind-Value="chequeNo" maxlength="50" />
+                        </div>
+                        <div class="col-md-4 cheque-field">
+                            <label>تاريخ الشيك <span>*</span></label>
+                            <RadzenDatePicker @bind-Value="chequeDate" DateFormat="dd/MM/yyyy" Style="width:100%" />
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="payment-section services-section">
+                <div class="payment-section-title">
+                    <span class="material-symbols-outlined">list_alt</span>
+                    <div><h3>الخدمات غير المسددة</h3><p>أدخل المبلغ المطلوب سداده أمام كل خدمة</p></div>
+                </div>
+
+                <label class="d-flex align-items-center gap-2 mb-3">
+                    <input type="checkbox" @bind="showFullPaymentDiscount" @bind:after="RefreshDiscountPreviewAsync" />
+                    إظهار قيمة خصم سداد كامل المبلغ
+                </label>
+                @if (showFullPaymentDiscount)
+                {
+                    @if (!hasFullPaymentDiscountConfiguration)
+                    {
+                        <div class="payment-validation" role="status">لا توجد إعدادات لخصم سداد كامل المبلغ لهذه المدرسة والسنة الدراسية. يرجى إضافتها في إعدادات الخصومات لاحتساب الخصم المتوقع.</div>
+                    }
+                    else if (fullPaymentDiscounts.Count == 0)
+                    {
+                        <div class="payment-validation" role="status">لا يوجد خصم إضافي مستحق وفق الإعدادات وتاريخ السند الحالي؛ قد يكون الخصم مسجلًا مسبقًا أو خارج فترة الاستحقاق.</div>
+                    }
+                }
+
+                @if (dueItems.Count == 0)
+                {
+                    <div class="payment-empty success">لا توجد خدمات مستحقة على الطالب حاليًا.</div>
+                }
+                else
+                {
+                    @foreach (var semester in dueItems.GroupBy(x => new { x.SemesterId, x.SemesterName }))
+                    {
+                        <div class="semester-group">
+                            <div class="semester-heading">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                <strong>@semester.Key.SemesterName</strong>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="payment-services-table">
+                                    <thead>
+                                        <tr>
+                                            <th>الخدمة</th>
+                                            <th>التصنيف</th>
+                                            <th style="width:200px; text-align:center;">المستحق</th>
+                                            @if (showFullPaymentDiscount && hasFullPaymentDiscountConfiguration)
+                                            {
+                                                <th style="width:200px; text-align:center;">الخصم المتوقع</th>
+                                                    <th style="width:200px; text-align:center;">المطلوب بعد الخصم</th>
+                                            }
+                                            <th>مبلغ السداد</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in semester)
+                                        {
+                                            <tr>
+                                                <td><strong>@item.ServiceName</strong></td>
+                                                <td>@item.CategoryName</td>
+                                                <td class="amount-due text-center" dir="ltr">@ReportFormatter.Amount(item.Outstanding) </td>
+                                                @if (showFullPaymentDiscount && hasFullPaymentDiscountConfiguration)
+                                                {
+                                                        <td dir="ltr" style="width:200px; text-align:center;">@ReportFormatter.Amount(ExpectedDiscount(item))</td>
+                                                        <td dir="ltr" style="width:200px; text-align:center;">@ReportFormatter.Amount(ExpectedPayment(item))</td>
+                                                }
+                                                <td style="width:200px;">
+                                                    <RadzenNumeric TValue="double" ShowUpDown="false" @bind-Value="item.PaymentAmount" Min="0" Max="@((decimal)item.Outstanding)" Format="#,##0.##" Change="@(_ => AllocationChanged(item))" Style="width:100%;" TextAlign="TextAlign.Center" />
+                                                    @if (!string.IsNullOrWhiteSpace(item.Error))
+                                                    {
+                                                        <small class="payment-error">@item.Error</small>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                }
+
+                <div class="excess-payment-row">
+                    <div class="excess-icon"><span class="material-symbols-outlined">account_balance_wallet</span></div>
+                    <div class="excess-copy">
+                        <strong>مبلغ فائض عن المستحق</strong>
+                        <span>يمكن إضافة أي مبلغ آخر ليظهر كرصيد دائن في حساب الطالب</span>
+                    </div>
+                    <RadzenNumeric TValue="double" ShowUpDown="false" @bind-Value="excessAmount" Min="0" Format="#,##0.##" TextAlign="TextAlign.Center" Style="width:170px;" />
+                </div>
+
+                <div class="payment-summary">
+                    <div>
+<span>المسدد من المستحقات</span><strong dir="ltr">@ReportFormatter.Amount(SelectedDueTotal) </strong> 
+</div>
+                    <div><span>المبلغ الفائض</span><strong dir="ltr">@ReportFormatter.Amount(excessAmount) </strong></div>
+                    <div class="payment-grand-total"><span>إجمالي المسدد</span><strong dir="ltr">@ReportFormatter.Amount(PaymentTotal)</strong></div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(validationMessage))
+                {
+                    <div class="payment-validation"><span class="material-symbols-outlined">error</span>@validationMessage</div>
+                }
+
+                <div class="payment-submit">
+                    <button type="button" class="submit-btn" disabled="@(isSaving || PaymentTotal <= 0)" @onclick="SaveAsync">
+                        @if (isSaving) { <span class="spinner-border spinner-border-sm"></span> }
+                        <span class="material-symbols-outlined">save</span>
+                        @_localizer["Save"]
+                    </button>
+                </div>
+            </section>
+        }
+        </fieldset>
+    </div>
+}

@@ -1,0 +1,108 @@
+@page "/process-details/{Id:guid}"
+@using Web.Components.Pages.Business
+@using Web.Components.Pages.Discounts
+@using Web.Components.Partial.WF
+@attribute [Authorize]
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+else if (process is null)
+{
+    <div class="bd-callout bd-callout-warning m-2">
+        @_localizer["NotFound"]
+    </div>
+}
+else
+{
+    <div class="modal fade" id="TrackProcessModal" tabindex="-1" aria-labelledby="TrackProcessModalLabel" aria-hidden="true" data-bs-focus="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="TrackProcessModalLabel"> @_localizer["Details"]</h2>
+                    <div style="text-align: left">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <TrackRequest ProcessId="@process.ProcessId"></TrackRequest>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="px-3">
+        <div class="bd-callout bd-callout-info">
+            <div class="row">
+                <div class="col-md-3 p-2">
+                    <b> @_localizer["ProcessId"] : </b><a href="#" style="direction:ltr;" data-bs-toggle="modal" data-bs-target="#TrackProcessModal"> <label style="direction:ltr !important;">@process.RefNo</label> </a>
+                </div>
+                <div class="col-md-5 p-2 text-center">
+                    <b> @_localizer["Task"] : </b> @process.CurrentTaskName
+                </div>
+                <div class="col-md-3 p-2 text-center">
+                    <b> @_localizer["Status"] : </b>@process.StatusName
+                </div>
+                <div class="col-md-1 p-2" style="text-align:end;">
+                    <span class="material-symbols-outlined icon c-primary pointer print-display-none" onclick="window.print();">
+                        print
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content-body">
+        @if (process.WorkflowTypeId == 1)
+        {
+            <DiscountRequestDetails ProcessId="@process.ProcessId" ProcessStatus="@process.StatusId" Permissions="@process.Permissions"></DiscountRequestDetails>
+        }
+        
+
+        <div class="text-center p-2">
+            @if (process.AllowWithdrawal)
+            {
+                <div class="modal fade" id="CancelModal" tabindex="-1" aria-labelledby="CancelModalLabel" aria-hidden="true" data-bs-focus="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title" id="CancelModalLabel"> @_localizer["Cancel"]</h2>
+                                <div style="text-align: left">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                            </div>
+                            <EditForm Model="action" OnValidSubmit="WithdrawAsync">
+                                <DataAnnotationsValidator />
+                                <div class="modal-body">
+                                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                                    <div class="p-2 justify-content">
+                                        @_localizer["Comments"]: <span class="c-red">[@_localizer["Required"]]</span>
+                                        <textarea class="form-control" required @bind=action.Comments @bind:event="oninput"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer center">
+                                    <button type="submit" class="btn btn-danger" disabled="@string.IsNullOrEmpty(action.Comments)">
+                                        @_localizer["Withdraw"]
+                                    </button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-danger mx-1" data-bs-toggle="modal" data-bs-target="#CancelModal">
+                    @_localizer["Withdraw"]
+                </button>
+            }
+        </div>
+
+        
+        @if (process.Histories.Any())
+        {
+            <div class="container-fluid">
+                <WfHistoryViewer Histories="@process.Histories" />
+            </div>
+        }
+    </div>
+
+    
+}

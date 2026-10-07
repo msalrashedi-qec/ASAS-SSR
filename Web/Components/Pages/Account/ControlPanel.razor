@@ -1,0 +1,228 @@
+﻿@page "/cpanel"
+@attribute [Authorize]
+
+<header>
+    <h2>@_localizer["RightsManagement"]</h2>
+</header>
+<div class="content-body">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="system/roles">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">group</span>
+                        <h3>@_localizer["ManageRoles"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="system/users">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">person</span>
+                        <h3>@_localizer["ManageUsers"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="suspendedusers">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">person_off</span>
+                        <h3>@_localizer["SuspendedUsers"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="user-roles">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">supervisor_account</span>
+                        <h3>@_localizer["UsersInRoles"]</h3>
+                    </div>
+                </a>
+            </div>
+                           
+        </div>
+            
+        <div class="row">
+                        
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="wf-panel">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">timeline</span>
+                        <h3>@_localizer["Workflow"]</h3>
+                    </div>
+                </a>
+            </div>
+                       
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="audit-trail">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">person_search</span>
+                        <h3>@_localizer["AuditTrail"]</h3>
+                    </div>
+                </a>
+            </div>
+                       
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="full-audit-trail">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">person_search</span>
+                        <h3>@_localizer["FullAuditTrail"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="bg-jobs">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">alarm_on</span>
+                        <h3>@_localizer["SetBgJobs"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="hangfire-dashboard">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">alarm_on</span>
+                        <h3>@_localizer["BgJobsDashboard"]</h3>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="years">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">hourglass_bottom</span>
+                        <h3>@_localizer["Years"]</h3>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="companies">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">corporate_fare</span>
+                        <h3>@_localizer["Companies"]</h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="schools">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">school</span>
+                        <h3>@_localizer["Scools"]</h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="school-levels">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">category</span>
+                        <h3>@_localizer["SchoolLevels"]</h3>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="school-classes">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">cast_for_education</span>
+                        <h3>@_localizer["SchoolClasses"]</h3>
+                    </div>
+                </a>
+            </div>
+           
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="classrooms">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">door_front</span>
+                        <h3>@_localizer["ClassRooms"]</h3>
+                    </div>
+                </a>
+            </div>
+           
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="buses">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">directions_bus</span>
+                        <h3>@_localizer["Buses"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="bus-drivers">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">person_pin_circle</span>
+                        <h3>@_localizer["BusDrivers"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="service-management">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">settings_applications</span>
+                        <h3>@_localizer["Services"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="tax-management">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">finance_chip</span>
+                        <h3>@_localizer["ManageTax"]</h3>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="discount-management">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">percent</span>
+                        <h3>@_localizer["ManageDiscounts"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="nationalities">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">flag</span>
+                        <h3>@_localizer["Nationalities"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="cities">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">location_city</span>
+                        <h3>@_localizer["Cities"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="districts">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">location_city</span>
+                        <h3>@_localizer["Districts"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="banks">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">account_balance</span>
+                        <h3>@_localizer["Banks"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 mt-3">
+                <a href="document-types">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">picture_as_pdf</span>
+                        <h3>@_localizer["DocumentTypes"]</h3>
+                    </div>
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>

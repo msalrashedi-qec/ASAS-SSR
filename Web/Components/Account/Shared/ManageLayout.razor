@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+@layout Web.Components.Layout.MainLayout
+
+<header>
+    <h2>@_localizer["UserProfile"]</h2>
+</header>
+<div class="content-body">
+    <div class="row">
+        <div class="col-lg-3">
+            <ManageNavMenu />
+        </div>
+        <div class="col-lg-9">
+            @Body
+        </div>
+    </div>
+</div>

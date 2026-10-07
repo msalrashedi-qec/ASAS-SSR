@@ -1,0 +1,131 @@
+﻿@if (isProcessing)
+{
+    <LoadingBar />
+}
+<div class="modal-body">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0"> @(_localizer["SelectedLanguage"] == "ar" ? service.NameAr : service.Name)</h5>
+        </div>
+        <div class="card-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                <div class="alert alert-warning" role="alert">
+                    @_localizer["PriceShouldBeEnteredExcludingTax"]
+                </div>
+                <div class="row">
+                    <div class="col-md-3 p-2">
+                        @_localizer["Class"]
+                        <RadzenDropDown @bind-Value=@_model.Classes Data=@classes TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                        Multiple=true Chips=true class="form-control" />
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["Semester"]
+                        <RadzenDropDown @bind-Value=@_model.Semesters Data=@semesters TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                        Multiple=true Chips=true class="form-control" />
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["PriceForSemester"]:
+                        <InputNumber class="form-control" @bind-Value="_model.Price" maxlength="10" />
+                    </div>
+                    <div class="col-md-3 p-2">
+                        <button type="submit" disabled="@isProcessing" class="btn btn-primary" style="margin-top:30px;">
+                            @_localizer["Save"]
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="overflow-auto pt-3">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>@_localizer["Class"]</th>
+                            <th>@_localizer["Semester"]</th>
+                            <th>@_localizer["Price"]</th>
+                            <th>@_localizer["Action"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in servicePrices)
+                        {
+                            <tr class="@(item.IsDeletable ? "bg-light-danger fs-3" : "")">
+                                <td>
+                                    @if (item.IsEditable)
+                                    {
+                                        <RadzenDropDown @bind-Value=@item.ClassId Data=@classes TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                                        AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" class="form-control" />
+                                    }
+                                    else
+                                    {
+                                        @(_localizer["SelectedLanguage"] == "ar" ? item.ClassNameAr : item.ClassName)
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsEditable)
+                                    {
+                                        <RadzenDropDown @bind-Value=@item.SemesterId Data=@semesters TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                                        class="form-control" />
+                                    }
+                                    else
+                                    {
+                                        @(_localizer["SelectedLanguage"] == "ar" ? item.SemesterNameAr : item.SemesterName)
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.IsEditable)
+                                    {
+                                        <InputNumber class="form-control text-center" @bind-Value="item.Price" maxlength="10" />
+                                    }
+                                    else
+                                    {
+                                        @ReportFormatter.Amount(item.Price)
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (item.IsEditable)
+                                    {
+                                        <span class="material-symbols-outlined icon c-green pointer" @onclick="() => EditAsync(item)" title="@_localizer["Save"]">
+                                            check_circle
+                                        </span>
+                                        <span class="material-symbols-outlined icon c-grey pointer" @onclick="() => item.IsEditable = false" title="@_localizer["Cancel"]">
+                                            cancel
+                                        </span>
+                                    }
+                                    else if (item.IsDeletable)
+                                    {
+                                        <span class="material-symbols-outlined icon c-red pointer" @onclick="() => DeletePriceAsync(item)" title="@_localizer["Confirm"]">
+                                            delete_forever
+                                        </span>
+                                        <span class="material-symbols-outlined icon c-grey pointer" @onclick="() => item.IsDeletable = false" title="@_localizer["Cancel"]">
+                                            cancel
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => item.IsEditable = true" title="@_localizer["Edit"]">
+                                            edit
+                                        </span>
+                                        <span class="material-symbols-outlined icon c-red pointer" @onclick="() => item.IsDeletable = true" title="@_localizer["Delete"]">
+                                            delete
+                                        </span>
+                                    }
+
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+

@@ -1,0 +1,133 @@
+@page "/detailed-account/{StudentId:guid}"
+@attribute [Authorize(Policy = Policies.StudentAccounts.View)]
+
+
+<PageTitle>@_localizer["DetailedAccountStatement"]</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header class="report-screen-header print-display-none">
+    <h2>@_localizer["DetailedAccountStatement"]</h2>
+</header>
+<RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["DetailedAccountStatement"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+<div class="student-account-toolbar print-display-none">
+    <button type="button" class="btn btn-outline-secondary" @onclick="PrintAsync" disabled="@(student is null)">
+        <span class="material-symbols-outlined">print</span>
+        @_localizer["Print"]
+    </button>
+    <button type="button" class="btn btn-outline-danger" @onclick="ExportPdfAsync" disabled="@(student is null)">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        @_localizer["ExportPdf"]
+    </button>
+    <button type="button" class="btn btn-outline-success" @onclick="ExportExcelAsync" disabled="@(student is null || isExporting)">
+        <span class="material-symbols-outlined">table_view</span>
+        @_localizer["ExportExcel"]
+    </button>
+</div>
+
+@if (!isLoading && student is null)
+{
+    <div class="content-body p-4 text-center bg-light-warning">@_localizer["NotFound"]</div>
+}
+else if (student is not null)
+{
+    <article id="detailed-account-report" class="student-account-report detailed-account-report" dir="@(isArabic ? "rtl" : "ltr")">
+        <section class="student-account-heading detailed-account-heading">
+            <div class="student-account-print-date">
+                @_localizer["PrintDate"] : <span dir="ltr">@ReportFormatter.DateTime(printedOn)</span>
+            </div>
+            <div class="student-account-title">
+                <h1>@_localizer["DetailedAccountStatement"]</h1>
+                <strong>@SchoolName</strong>
+                <div class="detailed-account-student">@_localizer["StudentName"]: @StudentFullName</div>
+            </div>
+            <div class="student-account-logo">
+                @if (!string.IsNullOrWhiteSpace(student.School.Logo))
+                {
+                    <img src="@Assets[$"uploads/schools/{student.School.Logo}"]" alt="@SchoolName" />
+                }
+            </div>
+        </section>
+
+        @if (groups.Count == 0)
+        {
+            <div class="student-account-empty detailed-account-empty">@_localizer["NoTransactionsFound"]</div>
+        }
+        else
+        {
+            @foreach (var group in groups)
+            {
+                <section class="detailed-account-group">
+                    <h2>@group.Name</h2>
+                    <div class="student-account-table-wrap">
+                        <table class="student-account-table detailed-account-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>@_localizer["Service"]</th>
+                                    <th>@_localizer["Semester"]</th>
+                                    <th>@_localizer["Operation"]</th>
+                                    <th>@_localizer["TransactionDate"]</th>
+                                    <th>@_localizer["Debit"]</th>
+                                    <th>@_localizer["Credit"]</th>
+                                    <th>@_localizer["Remaining"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in group.Rows)
+                                {
+                                    <tr>
+                                        <td>@row.Number</td>
+                                        <td>@row.Service</td>
+                                        <td>@row.Semester</td>
+                                        <td>@row.Operation</td>
+                                        <td class="student-account-nowrap" dir="ltr">@ReportFormatter.Date(row.TransactionDate)</td>
+                                        <td class="student-account-money" dir="ltr">@ReportFormatter.Amount(row.Debit)</td>
+                                        <td class="student-account-money" dir="ltr">@ReportFormatter.Amount(row.Credit)</td>
+                                        <td class="student-account-money" dir="ltr">@ReportFormatter.Amount(row.Remaining)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="5">@_localizer["Total"]</th>
+                                    <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(group.TotalDebit)</th>
+                                    <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(group.TotalCredit)</th>
+                                    <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(group.Remaining)</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+            }
+        }
+
+        <section class="detailed-account-summary">
+            <div class="detailed-account-summary-label">@_localizer["AccountSummary"]</div>
+            <table class="student-account-table detailed-account-summary-table">
+                <thead>
+                    <tr>
+                        <th>@_localizer["Debit"]</th>
+                        <th>@_localizer["Credit"]</th>
+                        <th>@_localizer["Remaining"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(TotalDebit)</th>
+                        <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(TotalCredit)</th>
+                        <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(Remaining)</th>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </article>
+}

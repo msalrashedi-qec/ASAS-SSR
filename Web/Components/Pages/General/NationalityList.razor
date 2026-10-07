@@ -1,0 +1,99 @@
+@page "/nationalities"
+
+@attribute [Authorize]
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_model" OnValidSubmit="SaveDataAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="p-2">
+                        @_localizer["NameEn"]:
+                        <InputText class="form-control" @bind-Value="_model.Name" maxlength="100" />
+                    </div>
+                    <div class="p-2">
+                        @_localizer["NameAr"]:
+                        <InputText class="form-control" @bind-Value="_model.NameAr" maxlength="100" />
+                    </div>
+                    
+                    <div class="modal-footer center">
+                        <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                            @_localizer["Save"]
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>
+        @_localizer["Nationalities"]
+    </h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["Nationalities"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <div class="px-4">
+        <div class="pb-3">
+            <button type="button" class="btn btn-primary" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                @_localizer["New"]
+            </button>
+        </div>
+        <div class="overflow-auto">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@_localizer["NameEn"]</th>
+                        <th>@_localizer["NameAr"]</th>
+                        <th>@_localizer["Action"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var item in nationalities)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.Name</td>
+                                <td>@item.NameAr</td>
+                                <td>
+                                    <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                                        edit
+                                    </span>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>

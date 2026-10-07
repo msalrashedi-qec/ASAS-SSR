@@ -1,0 +1,216 @@
+.workflow-details-layout {
+    align-items: start;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+}
+
+.workflow-details-layout.actions-only {
+    grid-template-columns: minmax(280px, 340px);
+    justify-content: end;
+}
+
+.workflow-main {
+    min-width: 0;
+}
+
+.workflow-actions {
+    align-self: start;
+    position: sticky;
+    top: 1rem;
+}
+
+/* Let Bootstrap dialogs escape the sticky stacking context while open. */
+.workflow-actions:has(.modal.show) {
+    position: static;
+}
+
+.action-card {
+    background: #fff;
+    border: 1px solid #dce8ec;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(27, 70, 92, .12);
+    overflow: hidden;
+}
+
+.action-card-header {
+    align-items: center;
+    background: linear-gradient(135deg, #31546a, #2596b5);
+    color: #fff;
+    display: flex;
+    gap: .75rem;
+    padding: 1rem;
+}
+
+.action-card-icon {
+    align-items: center;
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 12px;
+    display: inline-flex;
+    flex: 0 0 42px;
+    font-size: 24px;
+    height: 42px;
+    justify-content: center;
+}
+
+.action-card-header h4 {
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.action-task-name {
+    display: block;
+    font-size: .72rem;
+    margin-top: .2rem;
+    opacity: .82;
+}
+
+.action-card-body {
+    padding: 1rem;
+}
+
+.action-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.action-field label {
+    color: #304e5f;
+    display: block;
+    font-size: .76rem;
+    font-weight: 800;
+    margin-bottom: .4rem;
+}
+
+.action-comments {
+    background: #fffef1;
+    border-color: #e6e0ac;
+    min-height: 110px;
+    resize: vertical;
+}
+
+.action-comments:focus {
+    background: #fff;
+    border-color: #49a8bf;
+    box-shadow: 0 0 0 .2rem rgba(73, 168, 191, .14);
+}
+
+.action-upload {
+    align-items: center;
+    background: #f7fafb;
+    border: 1px dashed #adc8d1;
+    border-radius: 10px;
+    display: flex;
+    gap: .35rem;
+    overflow: hidden;
+    padding: .65rem;
+}
+
+.action-upload > .material-symbols-outlined {
+    color: #3094ae;
+    flex: 0 0 auto;
+    font-size: 20px;
+}
+
+.action-upload input[type="file"] {
+    font-size: .68rem;
+    min-width: 0;
+    width: 100%;
+}
+
+.attachment-list {
+    display: grid;
+    gap: .35rem;
+    margin-top: .55rem;
+}
+
+.attachment-item {
+    align-items: center;
+    background: #f1f6f8;
+    border-radius: 8px;
+    display: flex;
+    font-size: .68rem;
+    gap: .4rem;
+    justify-content: space-between;
+    padding: .4rem .5rem;
+}
+
+.attachment-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attachment-remove {
+    color: #c44747;
+    display: inline-flex;
+    text-decoration: none;
+}
+
+.attachment-remove .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.action-buttons {
+    border-top: 1px solid #e8eef0;
+    display: grid;
+    gap: .5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-top: 1rem;
+}
+
+.action-buttons .btn {
+    align-items: center;
+    border-radius: 9px;
+    display: inline-flex;
+    font-size: .72rem;
+    font-weight: 800;
+    gap: .3rem;
+    justify-content: center;
+    margin: 0;
+    min-height: 38px;
+    padding: .5rem .6rem;
+}
+
+.action-buttons .material-symbols-outlined {
+    font-size: 17px;
+}
+
+.action-buttons .action-primary {
+    box-shadow: 0 5px 12px rgba(25, 135, 84, .16);
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+    .workflow-details-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+    }
+}
+
+@media (max-width: 850px) {
+    .workflow-details-layout,
+    .workflow-details-layout.actions-only {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .workflow-actions {
+        position: static;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-card-body,
+    .action-card-header {
+        padding: .8rem;
+    }
+
+    .action-buttons {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .action-buttons .action-primary {
+        grid-column: auto;
+    }
+}

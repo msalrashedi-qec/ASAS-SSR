@@ -1,0 +1,175 @@
+@page "/school-classes"
+
+
+@attribute [Authorize]
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel">@_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_model" OnValidSubmit="SaveDataAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="p-2">
+                        @_localizer["Level"]:
+                        <select class="form-control" required @bind="_model.LevelId">
+                            <option value="0">@_localizer["Select"]</option>
+                            @foreach (var level in schoolLevels)
+                            {
+                                <option value="@level.Id">@level.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="p-2">
+                        @_localizer["NameEn"]:
+                        <InputText class="form-control" required @bind-Value="_model.Name" maxlength="100" />
+                    </div>
+                    <div class="p-2">
+                        @_localizer["NameAr"]:
+                        <InputText class="form-control" required @bind-Value="_model.NameAr" maxlength="100" />
+                    </div>
+                    <div class="p-2">
+                        @_localizer["SN"]:
+                        <InputNumber class="form-control" required @bind-Value="_model.SN" />
+                    </div>
+                    <div class="p-2">
+                        <div class="form-check">
+                            <InputCheckbox class="form-check-input" id="isGraduationClass" @bind-Value="_model.IsGraduationClass" />
+                            <label class="form-check-label" for="isGraduationClass">
+                                @_localizer["IsGraduationClass"]
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer center">
+                        <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                            @_localizer["Save"]
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="DeleteModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="DeleteModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DeleteModalLabel">@_localizer["Delete"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body">
+                <div class="py-3 c-red">@(_localizer["SelectedLanguage"] == "ar" ? $"{_model.LevelNameAr} - {_model.NameAr}" : $"{_model.LevelName} - {_model.Name}")</div>
+                @_localizer["ConfirmDelete"]
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@_localizer["Cancel"]</button>
+                <button class="btn btn-danger" @onclick="() => DeleteAsync(_model)">
+                    @_localizer["Delete"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>
+        @_localizer["SchoolClasses"]
+    </h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["SchoolClasses"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <div class="p-4">
+        <button type="button" class="btn btn-outline-primary" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+            @_localizer["New"]
+        </button>
+        <div class="card mt-2">
+            <div class="card-header">
+                @_localizer["Search"]
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 p-2">
+                        <RadzenDropDown @bind-Value=@_search.LevelId Data=@levelsForSearch Change="GetListAsync" AllowClear="true"
+                                        TextProperty="@_localizer["FieldName"]" ValueProperty="Id" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="overflow-auto mt-3">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@_localizer["Level"]</th>
+                        <th>@_localizer["Name"]</th>
+                        <th>@_localizer["SN"]</th>
+                        <th>@_localizer["IsGraduationClass"]</th>
+                        <th>@_localizer["Action"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var item in schoolClasses)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.LevelNameAr : item.LevelName)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</td>
+                                <td>@item.SN</td>
+                                <td>
+                                    @if (item.IsGraduationClass)
+                                    {
+                                        <span class="badge bg-success fs-6">@_localizer["Yes"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary fs-6">@_localizer["No"]</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                                        edit
+                                    </span>
+                                    <span class="material-symbols-outlined icon c-red pointer" @onclick="async () => Edit(item)" data-bs-toggle="modal" data-bs-target="#DeleteModal">
+                                        delete
+                                    </span>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

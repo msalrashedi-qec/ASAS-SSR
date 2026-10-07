@@ -1,0 +1,115 @@
+@page "/student-account-transactions/{StudentId:guid}"
+@attribute [Authorize(Policy = Policies.StudentAccounts.View)]
+
+<PageTitle>@_localizer["StudentAccountTransactions"]</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header class="report-screen-header print-display-none">
+    <h2>@_localizer["StudentAccountTransactions"]</h2>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["StudentAccountTransactions"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</header>
+
+<div class="student-account-toolbar print-display-none">
+    <button type="button" class="btn btn-outline-secondary" @onclick="PrintAsync" disabled="@(student is null)">
+        <span class="material-symbols-outlined">print</span>
+        @_localizer["Print"]
+    </button>
+    <button type="button" class="btn btn-outline-danger" @onclick="ExportPdfAsync" disabled="@(student is null)">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        @_localizer["ExportPdf"]
+    </button>
+    <button type="button" class="btn btn-outline-success" @onclick="ExportExcelAsync" disabled="@(student is null || isExporting)">
+        <span class="material-symbols-outlined">table_view</span>
+        @_localizer["ExportExcel"]
+    </button>
+</div>
+
+@if (!isLoading && student is null)
+{
+    <div class="content-body p-4 text-center bg-light-warning">@_localizer["NotFound"]</div>
+}
+else if (student is not null)
+{
+    <article id="student-account-report" class="student-account-report">
+        <section class="student-account-heading">
+            <div class="student-account-print-date">
+                @_localizer["PrintDate"] : <span dir="ltr">@ReportFormatter.DateTime(printedOn)</span>
+            </div>
+            <div class="student-account-title">
+                <h1>@_localizer["StudentAccountTransactions"]</h1>
+                <strong>@StudentCode : @StudentFullName</strong>
+            </div>
+            <div class="student-account-logo align-content-end">
+                @if (!string.IsNullOrWhiteSpace(student.School.Logo))
+                {
+                    <img src="@Assets[$"uploads/schools/{student.School.Logo}"]" alt="@SchoolName" />
+                }
+            </div>
+        </section>
+
+        <div class="student-account-table-wrap">
+            <table class="student-account-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@_localizer["Item"]</th>
+                        <th>@_localizer["Service"]</th>
+                        <th>@_localizer["Semester"]</th>
+                        <th>@_localizer["Description"]</th>
+                        <th>@_localizer["SchoolLevel"]</th>
+                        <th>@_localizer["Class"]</th>
+                        <th>@_localizer["TransactionDate"]</th>
+                        <th>@_localizer["Debit"]</th>
+                        <th>@_localizer["Credit"]</th>
+                        <th>@_localizer["Balance"]</th>
+                        <th>@_localizer["AdditionDate"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (rows.Count == 0)
+                    {
+                        <tr><td colspan="12" class="student-account-empty">@_localizer["NoTransactionsFound"]</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td>@row.Number</td>
+                                <td>@row.Item</td>
+                                <td>@row.Service</td>
+                                <td>@row.Semester</td>
+                                <td class="student-account-description">@row.Description</td>
+                                <td>@row.Level</td>
+                                <td>@row.Class</td>
+                                <td class="student-account-nowrap" dir="ltr">@ReportFormatter.Date(row.TransactionDate)</td>
+                                <td class="student-account-money" dir="ltr">@ReportFormatter.Amount(row.Debit)</td>
+                                <td class="student-account-money" dir="ltr">@ReportFormatter.Amount(row.Credit)</td>
+                                <td class="student-account-money" dir="ltr">@ReportFormatter.Amount(row.Balance)</td>
+                                <td class="student-account-nowrap" dir="ltr">@ReportFormatter.Date(row.AddedOn)<br />@ReportFormatter.Time(row.AddedOn)</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="8">@_localizer["Total"]</th>
+                        <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(TotalDebit)</th>
+                        <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(TotalCredit)</th>
+                        <th class="student-account-money" dir="ltr">@ReportFormatter.Amount(FinalBalance)</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </article>
+}

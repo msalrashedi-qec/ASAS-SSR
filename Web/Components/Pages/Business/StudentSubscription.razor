@@ -1,0 +1,185 @@
+@page "/student-subscription/{StudentId:guid}"
+@attribute [Authorize(Policy = Policies.Subscriptions.Add)]
+
+<PageTitle>@_localizer["StudentSubscriptions"]</PageTitle>
+
+@if (isLoading || isSaving)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>@_localizer["StudentSubscriptions"]</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["StudentSubscriptions"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body subscription-page">
+    @if (!isLoading && student is null)
+    {
+        <div class="subscription-empty">
+            <span class="material-symbols-outlined">person_search</span>
+            <p>@_localizer["NotFound"]</p>
+        </div>
+    }
+    else if (student is not null && contract is not null)
+    {
+        <section class="student-summary">
+            <div class="student-avatar" aria-hidden="true">
+                <span class="material-symbols-outlined">school</span>
+            </div>
+            <div class="student-identity">
+                <h3>@StudentFullName</h3>
+                <div class="student-meta">
+                    <span><strong>@StudentCode</strong></span>
+                    <span>@Localized(contract.Class.Name, contract.Class.NameAr)</span>
+                    <span>@contract.Year.Name</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="subscription-card">
+            <div class="subscription-card-heading">
+                <div>
+                    <span class="material-symbols-outlined active-icon">verified</span>
+                    <div>
+                        <h3>@_localizer["ActiveSubscriptions"]</h3>
+                        <p>@_localizer["ActiveSubscriptionsHelp"]</p>
+                    </div>
+                </div>
+                <span class="count-badge">@activeSubscriptions.Count</span>
+            </div>
+
+            @if (activeSubscriptions.Count == 0)
+            {
+                <div class="subscription-empty compact">
+                    <span class="material-symbols-outlined">inbox</span>
+                    <p>@_localizer["NoActiveSubscriptions"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table subscription-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>@_localizer["Service"]</th>
+                                <th>@_localizer["Semester"]</th>
+                                <th>@_localizer["Price"]</th>
+                                <th>@_localizer["SubscriptionDate"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in activeSubscriptions.Select((value, index) => (value, index)))
+                            {
+                                <tr>
+                                    <td>@(item.index + 1)</td>
+                                    <td class="service-name">@Localized(item.value.ServiceName, item.value.ServiceNameAr)</td>
+                                    <td>@Localized(item.value.SemesterName, item.value.SemesterNameAr)</td>
+                                    <td class="money" dir="ltr">@ReportFormatter.Amount(item.value.Amount)</td>
+                                    <td dir="ltr">@item.value.SubscriptionDate.ToString("dd-MM-yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section class="subscription-card">
+            <div class="subscription-card-heading">
+                <div>
+                    <span class="material-symbols-outlined available-icon">add_card</span>
+                    <div>
+                        <h3>@_localizer["AvailableServices"]</h3>
+                        <p>@_localizer["SubscriptionHelp"]</p>
+                    </div>
+                </div>
+                <span class="count-badge available">@availableServices.Count(x => !x.IsSubscribed)</span>
+            </div>
+
+            @if (availableServices.Count == 0)
+            {
+                <div class="subscription-empty compact">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <p>@_localizer["NoAvailableServices"]</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var category in availableServices.GroupBy(x => new { x.CategoryId, x.CategoryName, x.CategoryNameAr }))
+                {
+                    <div class="service-group">
+                        <div class="service-group-title">
+                            <span class="material-symbols-outlined">category</span>
+                            @Localized(category.Key.CategoryName, category.Key.CategoryNameAr)
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table subscription-table available-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>@_localizer["Service"]</th>
+                                        <th>@_localizer["Semester"]</th>
+                                        <th>@_localizer["Price"]</th>
+                                        <th>@_localizer["SubscriptionDate"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in category.Select((value, index) => (value, index)))
+                                    {
+                                        <tr class="@(item.value.IsSubscribed && item.value.CategoryId == 30 ? "subscribed-row" : null)">
+                                            <td>@(item.index + 1)</td>
+                                            <td class="service-name">
+                                                @Localized(item.value.ServiceName, item.value.ServiceNameAr)
+                                                @if (item.value.IsSubscribed)
+                                                {
+                                                    <span class="subscribed-badge">
+                                                        <span class="material-symbols-outlined">check</span>
+                                                        @_localizer["Subscribed"]
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>@Localized(item.value.SemesterName, item.value.SemesterNameAr)</td>
+                                            <td class="money" dir="ltr">@ReportFormatter.Amount(item.value.Price)</td>
+                                            <td class="date-cell">
+                                                @if (item.value.IsSubscribed && item.value.CategoryId == 30)
+                                                {
+                                                    <span class="date-placeholder">—</span>
+                                                }
+                                                else
+                                                {
+                                                    <RadzenDatePicker @bind-Value="item.value.SubscriptionDate" DateFormat="dd/MM/yyyy" Min="contract.StartDate" Max="contract.EndDate" AllowClear="true" Placeholder="dd/mm/yyyy" Style="width:100%" />
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+
+                <div class="subscription-actions">
+                    <span>@_localizer["SelectedServices"]: <strong>@SelectedCount</strong></span>
+                    <button type="button" class="submit-btn" disabled="@(isSaving || SelectedCount == 0)" @onclick="SaveSubscriptionsAsync">
+                        <span class="material-symbols-outlined">save</span>
+                        @_localizer["SaveSubscriptions"]
+                    </button>
+                </div>
+            }
+        </section>
+    }
+    else if (!isLoading)
+    {
+        <div class="subscription-empty">
+            <span class="material-symbols-outlined">contract_delete</span>
+            <p>@_localizer["StudentContractNotFound"]</p>
+        </div>
+    }
+</div>

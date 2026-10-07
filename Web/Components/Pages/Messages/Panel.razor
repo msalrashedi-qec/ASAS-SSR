@@ -1,0 +1,36 @@
+﻿@page "/msg-panel"
+@attribute [Authorize]
+
+<header>
+    <h2>@_localizer["Messages"]</h2>
+</header>
+<div class="content-body">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mt-3">
+                <a href="full-debit-claim">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">account_balance_wallet</span>
+                        <h3>@_localizer["FullDebitClaims"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-4 col-md-6 mt-3">
+                <a href="service-fee-claim">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">request_quote</span>
+                        <h3>@_localizer["ServiceFeeClaims"]</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-4 col-md-6 mt-3">
+                <a href="custom-messages">
+                    <div class="cpanel-box">
+                        <span class="material-symbols-outlined">sms</span>
+                        <h3>@_localizer["CustomMessages"]</h3>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

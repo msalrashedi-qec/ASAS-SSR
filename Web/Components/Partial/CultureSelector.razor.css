@@ -1,0 +1,12 @@
+.culture-selector {
+    border-radius: 30px;
+    min-width: 64px;
+    height: 36px;
+    padding: 0 10px;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.culture-selector svg {
+    flex-shrink: 0;
+}

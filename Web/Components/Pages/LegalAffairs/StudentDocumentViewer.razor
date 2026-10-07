@@ -1,0 +1,128 @@
+﻿@page "/student-document-viewer/{Id:guid}"
+@layout AnonymousLayout
+
+
+<div class="modal fade document-preview-modal" id="DocumentPreviewModal" tabindex="-1" aria-labelledby="DocumentPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header document-preview-header document-preview-title">
+                <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                <div>
+                    <h2 class="document-preview-title" id="DocumentPreviewModalLabel">@GetDocumentTitle(previewDocument)</h2>
+                </div>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body document-preview-body">
+                @if (previewDocument is not null)
+                {
+                    @if (IsImage(previewDocument))
+                    {
+                        <img class="document-preview-image" src="@GetDocumentUrl(previewDocument)" alt="@GetDocumentTitle(previewDocument)" />
+                    }
+                    else if (IsPdf(previewDocument))
+                    {
+                        <iframe class="document-preview-frame" src="@GetDocumentUrl(previewDocument)" title="@GetDocumentTitle(previewDocument)"></iframe>
+                    }
+                    else
+                    {
+                        <div class="document-preview-unavailable">
+                            <span class="material-symbols-outlined" aria-hidden="true">draft</span>
+                            <p>@previewDocument.FileName</p>
+                        </div>
+                    }
+                }
+            </div>
+            @if (previewDocument is not null)
+            {
+                <div class="modal-footer document-preview-footer">
+                    <a class="btn btn-primary" href="@GetDocumentUrl(previewDocument)" download="@previewDocument.FileName">
+                        <span class="material-symbols-outlined" aria-hidden="true">download</span>
+                        @_localizer["Download"]
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>@_localizer["StudentDocuments"]</h2>
+</header>
+
+<div class="p-4">
+    <section class="student-summary">
+        <div class="student-avatar" aria-hidden="true">
+            <span class="material-symbols-outlined">school</span>
+        </div>
+        <div class="student-identity">
+            <h3>@StudentFullName</h3>
+            <div class="student-meta">
+                <span><strong>@StudentCode</strong></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="row mt-3">
+        <div class="col-md-3 p-2">
+            @_localizer["Year"]:
+            <RadzenDropDown @bind-Value=@selectedYearId Data=@years TextProperty="Name" ValueProperty="Id" Change="@GetListAsync" class="form-control" />
+        </div>
+    </div>
+
+    <div class="overflow-auto mt-4">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>@_localizer["File"]</th>
+                    <th>@_localizer["Type"]</th>
+                    <th>@_localizer["Comments"]</th>
+                    <th>@_localizer["Year"]</th>
+                    <th>@_localizer["Status"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in studentDocuments)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.FilePath))
+                            {
+                                <button type="button" class="document-thumbnail" title="@_localizer["View"]" aria-label="@_localizer["View"]"
+                                        @onclick="() => View(item)" data-bs-toggle="modal" data-bs-target="#DocumentPreviewModal">
+                                    @if (IsImage(item))
+                                    {
+                                        <img src="@GetDocumentUrl(item)" alt="@GetDocumentTitle(item)" />
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined document-file-icon" aria-hidden="true">picture_as_pdf</span>
+                                    }
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined document-file-icon" aria-hidden="true">draft</span>
+                            }
+                        </td>
+                        <td>@GetDocumentTitle(item)</td>
+                        <td>@item.Comments</td>
+                        <td>@item.YearName</td>
+                        <td>
+                            <span class="tag" style="background-color:@item.ColorCode">
+                                @(_localizer["SelectedLanguage"] == "ar" ? item.StatusNameAr : item.StatusName)
+                            </span>
+                        </td>
+                       
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

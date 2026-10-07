@@ -1,0 +1,34 @@
+﻿
+
+@using System.Globalization
+
+@inject NavigationManager Navigator
+
+<div class="d-flex">
+    <a href="@CultureChangeUrl" data-enhance-nav="false" role="button" class="btn btn-brand culture-selector" aria-label="@(IsArabic ? "Switch to English" : "التبديل إلى العربية")" title="@(IsArabic ? "Switch to English" : "التبديل إلى العربية")">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" />
+            <ellipse cx="12" cy="12" rx="4" ry="9" />
+            <path d="M3 12h18" />
+        </svg>
+        <span>@(IsArabic ? "EN" : "ع")</span>
+    </a>
+</div>
+
+@code {
+    private CultureInfo Culture { get; set; }
+
+    private bool IsArabic =>
+        string.Equals(Culture?.TwoLetterISOLanguageName, "ar", StringComparison.OrdinalIgnoreCase);
+
+    private string CultureChangeUrl { get; set; } = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        Culture = CultureInfo.CurrentCulture;
+        var newCultureName = IsArabic ? "en-GB" : "ar-EG";
+        var relativeUrl = Navigator.ToBaseRelativePath(Navigator.Uri);
+        var returnUrl = $"/{relativeUrl}";
+        CultureChangeUrl = $"/culture/SetCulture?culture={Uri.EscapeDataString(newCultureName)}&returnUrl={Uri.EscapeDataString(returnUrl)}";
+    }
+}

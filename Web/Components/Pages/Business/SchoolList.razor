@@ -1,0 +1,228 @@
+@page "/schools"
+@attribute [Authorize]
+
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_model" OnValidSubmit="SaveDataAsync" >
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="row">
+                        <div class="col-md-6 p-2">
+                            @_localizer["Company"]:
+                            <InputSelect id="classification" @bind-Value="_model.CompanyId" required class="form-control">
+                                @foreach (var item in companies)
+                                {
+                                    <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["Type"]:
+                            <InputSelect id="classification" @bind-Value="_model.TypeId" required class="form-control">
+                                @foreach (var item in types)
+                                {
+                                    <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                       
+                        <div class="col-md-6 p-2">
+                            @_localizer["NameEn"]:
+                            <InputText class="form-control" @bind-Value="_model.Name" required maxlength="100" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["NameAr"]:
+                            <InputText class="form-control" @bind-Value="_model.NameAr" required maxlength="100" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["Code"]:
+                            <InputText class="form-control" @bind-Value="_model.Code" required maxlength="50" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["City"]:
+                            <InputSelect id="classification" @bind-Value="_model.CityId" required class="form-control">
+                                @foreach (var item in cities)
+                                {
+                                    <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["Email"]:
+                            <InputText class="form-control" type="email" @bind-Value="_model.Email" required maxlength="100" />
+                        </div>
+                        <div class="col-md-12 p-2">
+                            @_localizer["Address"]:
+                            <InputText class="form-control" @bind-Value="_model.Address" required maxlength="200" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["PO"]:
+                            <InputText class="form-control" @bind-Value="_model.PO" maxlength="50" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["PoCode"]:
+                            <InputText class="form-control" @bind-Value="_model.PoCode" maxlength="20" />
+                        </div>
+                        <div class="col-12 card">
+                            <div class="card-header">
+                                @_localizer["BankInformation"]
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 p-2">
+                                    @_localizer["ChequePayeeName"]:
+                                    <InputText class="form-control" @bind-Value="_model.ChequePayeeName" required maxlength="100" />
+                                </div>
+                                <div class="col-md-6 p-2">
+                                    @_localizer["BankName"]:
+                                    <InputText class="form-control" @bind-Value="_model.BankName" required maxlength="100" />
+                                </div>
+                                <div class="col-md-6 p-2">
+                                    @_localizer["IBAN"]:
+                                    <InputText class="form-control" @bind-Value="_model.IBAN" required maxlength="34" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 p-2">
+                            @_localizer["Logo"]:
+                            <InputFile class="form-control" accept="image/*" OnChange="OnLogoSelected" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer center">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                        @_localizer["Save"]
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="SmsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="SmsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="SmsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_smsModel" OnValidSubmit="SaveSmsAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="row">
+                        <div class="col-12 p-2">
+                            @_localizer["School"]:
+                            <label class="form-control">@(_localizer["SelectedLanguage"] == "ar" ? _smsModel.NameAr : _smsModel.Name)</label>
+                        </div>
+                        <div class="col-md-4 p-2">
+                            @_localizer["SenderName"]:
+                            <InputText class="form-control" @bind-Value="_smsModel.SmsSender" maxlength="50" />
+                        </div>
+                        <div class="col-md-4 p-2">
+                            @_localizer["UserName"]:
+                            <InputText class="form-control" @bind-Value="_smsModel.SmsUserName" maxlength="100" />
+                        </div>
+                        <div class="col-md-4 p-2">
+                            @_localizer["Password"]:
+                            <InputText class="form-control" type="password" @bind-Value="_smsModel.SmsPassword" maxlength="100" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer center">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                        @_localizer["Save"]
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>
+            @_localizer["Schools"]
+        </h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["Schools"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+<div class="p-4">
+    <button type="button" class="btn btn-outline-primary" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+        @_localizer["New"]
+    </button>
+
+    <div class="overflow-auto mt-4">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>@_localizer["Logo"]</th>
+                    <th>@_localizer["Code"]</th>
+                    <th>@_localizer["Name"]</th>
+                    <th>@_localizer["Type"]</th>
+                    <th>@_localizer["City"]</th>
+                    <th>@_localizer["Company"]</th>
+                    <th>@_localizer["Action"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in schools)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.Logo))
+                            {
+                                <img src="@Assets[$"uploads/schools/{item.Logo}"]" style="max-width: 80px; max-height: 80px;" />
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined">X</span>
+                            }
+                        </td>
+                        <td>@item.Code</td>
+                        <td>@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</td>
+                        <td>@(_localizer["SelectedLanguage"] == "ar" ? item.TypeNameAr : item.TypeName)</td>
+                        <td>@(_localizer["SelectedLanguage"] == "ar" ? item.CityNameAr : item.CityName)</td>
+                        <td>@(_localizer["SelectedLanguage"] == "ar" ? item.CompanyNameAr : item.CompanyName)</td>
+                        <td>
+                            <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                                edit
+                            </span>
+                            <span class="material-symbols-outlined icon c-orange pointer" @onclick="() => EditSMS(item)" data-bs-toggle="modal" data-bs-target="#SmsModal">
+                                sms
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

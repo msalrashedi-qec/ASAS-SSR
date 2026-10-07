@@ -1,0 +1,52 @@
+# IDE and user settings
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.local.json
+
+# Build output and temporary validation files
+**/bin/
+**/obj/
+**/tmp/
+*.log
+TestResults/
+**/artifacts/
+**/publish/
+**/out/
+**/build/
+**/node_modules/
+*.tmp
+*.temp
+*.cache
+
+# Local configuration and credentials
+appsettings.json
+appsettings.*.json
+!/Web/appsettings.example.json
+secrets.json
+appsettings.*.local.*
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+*.key
+*.keystore
+*.jks
+*.publishsettings
+*.pubxml
+*.db
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+*.bak
+
+# Runtime uploads and local publishing profiles
+/Web/wwwroot/uploads/
+/Web/Properties/PublishProfiles/

@@ -1,0 +1,387 @@
+@page "/system/roles"
+@attribute [Authorize(Policy = Policies.SystemAdmin.Manage)]
+
+
+@inject RoleManager<ApplicationRole> RoleManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IMapper Mapper
+@inject NotificationService NotificationService
+
+<PageTitle>@_localizer["SystemRoles"]</PageTitle>
+
+<div class="modal fade" id="RoleDetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="RoleDetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="RoleDetailsModalLabel">
+                    @if (_model.Id != null && _model.Id != "")
+                    {
+                        <span>@_localizer["Edit"] - @_model.Name</span>
+                    }
+                    else
+                    {
+                        <span>@_localizer["New"]</span>
+                    }
+                </h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+            }
+            
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="RoleForm">
+                <div class="modal-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="bd-callout bd-callout-danger" />
+                    <div class="mb-3">
+                        <label class="form-label">@_localizer["Name"] <span class="text-danger">*</span></label>
+                        <InputText class="form-control" @bind-Value="_model.Name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@_localizer["Description"]</label>
+                        <InputTextArea class="form-control" rows="3" @bind-Value="_model.Description" ></InputTextArea>
+                    </div>
+
+                    @if (_model.Id != null && _model.Id != "")
+                    {
+                        <div class="alert alert-info">
+                            <strong>@_localizer["UsersAssigned"]:</strong> <span class="badge bg-primary">@_model.UserCount</span>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1"><strong>@_localizer["CurrentClaims"]:</strong></small>
+                        @if (_model.Claims.Any())
+                        {
+                            @foreach (var claim in _model.Claims.Take(2))
+                        {
+                                <span class="badge bg-secondary me-1 mb-1">@_localizer[claim]</span>
+                        }
+                        @if (_model.Claims.Count > 2)
+                        {
+                            <span class="badge bg-secondary me-1 mb-1">+@(_model.Claims.Count - 2) @_localizer["More"]</span>
+                            }
+                        }
+                        else
+                        {
+                            <span>@_localizer["NotFound"]</span>
+                        }
+                    </div>
+
+                   
+                </div>
+                <div class="modal-footer">
+                    @if (!string.IsNullOrEmpty(_model.Name) && !string.IsNullOrWhiteSpace(_model.Name))
+                    {
+                        <button type="submit" class="submit-btn" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>@_localizer["Processing"]</span>
+                            }
+                            else
+                            {
+                                <span>@_localizer["Save"]</span>
+                            }
+                        </button>
+                    }
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled="@isProcessing">@_localizer["Close"]</button>
+                </div>
+             </EditForm>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="PermissionsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="PermissionsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="PermissionsModalLabel">
+                    @_localizer["ManagePermissions"] - @_model.Name
+                </h2>
+                <div style="text-align: end">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="alert alert-info">
+                    <strong>@_localizer["UsersCount"]:</strong> <span class="badge bg-primary">@_model.UserCount</span>
+                </div>
+
+                <div class="row">
+                    @foreach (var permission in _model.Permissions)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <InputCheckbox id="@permission.Name" class="form-check-input" @bind-Value="permission.IsGranted" />
+                            <label for="@permission.Name" class="form-check-label"> @_localizer[permission.Description] </label>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="submit-btn" @onclick="SavePermissionsAsync" disabled="@isProcessing">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>@_localizer["Processing"]</span>
+                    }
+                    else
+                    {
+                        <span>@_localizer["Save"]</span>
+                    }
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled="@isProcessing">@_localizer["Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ReportPermissionsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="ReportPermissionsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="ReportPermissionsModalLabel">
+                    @_localizer["ManageReportPermissions"] - @_model.Name
+                </h2>
+                <div style="text-align: end">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                @if (reportPermissions.Any())
+                {
+                    <div class="row g-3">
+                    @foreach (var report in reportPermissions)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <label class="report-permission-option" for="@($"report-permission-{report.Id}")">
+                                <InputCheckbox id="@($"report-permission-{report.Id}")" class="form-check-input" @bind-Value="report.IsPermitted" />
+                                <span class="material-symbols-outlined" aria-hidden="true">description</span>
+                                <span>@GetReportName(report)</span>
+                            </label>
+                        </div>
+                    }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">@_localizer["NoReportsAvailable"]</div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="submit-btn" @onclick="SaveReportPermissionsAsync" disabled="@(isProcessing || !reportPermissions.Any())">
+                    @if (isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>@_localizer["Processing"]</span>
+                    }
+                    else
+                    {
+                        <span>@_localizer["Save"]</span>
+                    }
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled="@isProcessing">@_localizer["Close"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="DeleteModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="DeleteModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DeleteModalLabel">@_localizer["Delete"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body">
+                <div class="py-3 c-red">@_model.Name</div>
+                @_localizer["ConfirmDelete"]
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" @onclick="() => DeleteAsync(_model)">
+                    @_localizer["Delete"]
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@_localizer["Cancel"]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="UsersInRoleModal" tabindex="-1" aria-labelledby="UsersInRoleModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="UsersInRoleModalLabel">
+                    <span>@_model.Name</span>
+                </h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+
+            <div class="modal-body">
+                @if (_model.Id != null && _model.Id != "")
+                {
+                    <div class="alert alert-info">
+                        <strong>@_localizer["UsersAssigned"]:</strong> <span class="badge bg-primary">@_model.UserCount</span>
+                    </div>
+                }
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">@_localizer["User"]</th>
+                            <th scope="col">@_localizer["Projects"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_model.UsersInRole?.Any() == true)
+                        {
+                            @foreach (var user in _model.UsersInRole)
+                            {
+                                <tr>
+                                    <td>@user.Name</td>
+                                    <td>
+                                        @(user.Projects?.Any() == true
+                                            ? string.Join(", ", user.Projects.Select(project => project.Name))
+                                            : @_localizer["NoProjectsFound"])
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">
+                                    @_localizer["NoUsersFound"]
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled="@isProcessing">@_localizer["Close"]</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+else
+{
+    <header>
+        <div class="p-2">
+            <h2>@_localizer["SystemRolesPermissions"]</h2>
+        </div>
+    </header>
+    <div class="p-2">
+        <RadzenBreadCrumb>
+            <ChildContent>
+                <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+                <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+                <RadzenBreadCrumbItem Text="@_localizer["SystemRoles"]" />
+            </ChildContent>
+        </RadzenBreadCrumb>
+    </div>
+    <div class="content-body px-3">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 pb-3">
+                        <button class="submit-btn" @onclick="New" data-bs-toggle="modal" data-bs-target="#RoleDetailsModal" disabled="@isProcessing">
+                            <span class="material-symbols-outlined" style="font-size: 20px; vertical-align: middle;">add</span> @_localizer["New"]
+                        </button>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="@_localizer["Search"]" @bind="searchTerm" @oninput="(ChangeEventArgs e) => searchTerm = e.Value?.ToString() ?? string.Empty" />
+                            <span class="input-group-text"><span class="material-symbols-outlined">search</span></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            @{
+                var filteredRoles = GetFilteredRoles();
+                if (filteredRoles.Any())
+                {
+                    @foreach (var role in filteredRoles)
+                    {
+                        <div class="col-md-3 mb-3">
+                            <div class="card role-card h-100" style="margin-bottom: 0px">
+                                <button type="button" class="role-edit-button" @onclick="() => Edit(role)" data-bs-toggle="modal" data-bs-target="#RoleDetailsModal" disabled="@isProcessing" title="@_localizer["EditRole"]" aria-label="@_localizer["EditRole"]">
+                                    <span class="material-symbols-outlined">edit</span>
+                                </button>
+                                <div class="card-body" style="flex: none;">
+                                    <h5 class="card-title">@role.Name</h5>
+                                    <p class="card-text text-muted">@role.Description</p>
+
+                                    <div class="mb-1">
+                                        <label class="badge pointer @GetUserCountBadge(role.UserCount)" @onclick="() => GetUsersInRoleAsync(role.Name)" data-bs-toggle="modal" data-bs-target="#UsersInRoleModal">
+                                            @_localizer["Users"] : @role.UserCount
+                                        </label>
+                                    </div>
+
+                                </div>
+                                <div class="card-footer bg-light">
+                                    <div class="btn-group role-actions w-100" role="group">
+                                        <button class="btn btn-sm btn-info" @onclick="() => GetPermissions(role)" data-bs-toggle="modal" data-bs-target="#PermissionsModal" disabled="@isProcessing" title="@_localizer["ManagePermissions"]">
+                                            <span class="material-symbols-outlined" style="font-size: 18px;">security</span> @_localizer["Permissions"]
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" @onclick="() => GetReportPermissionsAsync(role)" data-bs-toggle="modal" data-bs-target="#ReportPermissionsModal" disabled="@isProcessing" title="@_localizer["ManageReportPermissions"]">
+                                            <span class="material-symbols-outlined" style="font-size: 18px;">receipt_long</span> @_localizer["ReportPermissions"]
+                                        </button>
+                                        @if (role.UserCount == 0)
+                                        {
+                                            <button class="btn btn-sm btn-danger" @onclick="() => Edit(role)" data-bs-toggle="modal" data-bs-target="#DeleteModal" disabled="@isProcessing" title="@_localizer["DeleteRole"]">
+                                                <span class="material-symbols-outlined" style="font-size: 18px;">delete</span> @_localizer["Delete"]
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <span class="material-symbols-outlined me-2" style="vertical-align: middle;">search</span>
+                            No roles found matching your search.
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+

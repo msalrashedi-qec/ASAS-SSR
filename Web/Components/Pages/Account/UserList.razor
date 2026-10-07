@@ -1,0 +1,273 @@
+@page "/system/users"
+@* @attribute [Authorize(Policy = Policies.SystemAdmin.Manage)]
+ *@
+@using Web.Components.Partial.Account
+
+<PageTitle>System Users</PageTitle>
+
+<div class="modal fade" id="ChangePasswordModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="ChangePasswordModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="ChangePasswordModalLabel"> @_localizer["ChangePassword"] - @_passwordModel.UserName</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <EditForm Model="_passwordModel" OnValidSubmit="ChangePasswordAsync" FormName="ChangePasswordForm">
+                <div class="modal-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="bd-callout bd-callout-danger" />
+
+                    <div class="mb-3">
+                        <label for="admin-new-password" class="form-label">@_localizer["NewPassword"]</label>
+                        <InputText id="admin-new-password" type="password" class="form-control"
+                                   @bind-Value="_passwordModel.NewPassword"
+                                   autocomplete="new-password" disabled="@isChangingPassword" />
+                        <ValidationMessage For="() => _passwordModel.NewPassword" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="admin-confirm-password" class="form-label">@_localizer["ConfirmPassword"]</label>
+                        <InputText id="admin-confirm-password" type="password" class="form-control"
+                                   @bind-Value="_passwordModel.ConfirmPassword"
+                                   autocomplete="new-password" disabled="@isChangingPassword" />
+                        <ValidationMessage For="() => _passwordModel.ConfirmPassword" class="text-danger" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="submit-btn" disabled="@isChangingPassword">
+                        @if (isChangingPassword)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>@_localizer["Processing"]</span>
+                        }
+                        else
+                        {
+                            <span>@_localizer["ChangePassword"]</span>
+                        }
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled="@isChangingPassword">@_localizer["Close"]</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel">
+                    @if (_model.Id != string.Empty)
+                    {
+                        <span>@_localizer["Edit"] - @_model.Name</span>
+                    }
+                    else
+                    {
+                        <span>@_localizer["Details"]</span>
+                    }
+                </h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="RoleForm">
+                <div class="modal-body">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="bd-callout bd-callout-danger" />
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@_localizer["NameEn"]</label>
+                            <input type="text" class="form-control" @bind="_model.Name" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@_localizer["UserName"]</label>
+                            <label class="form-control">@_model.UserName</label>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@_localizer["Email"]</label>
+                            <label class="form-control">@_model.Email</label>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@_localizer["PhoneNumber"]</label>
+                            <input type="tel" class="form-control text-center" @bind="_model.PhoneNumber" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">@_localizer["DefaultLanguage"]</label>
+                            <select class="form-select" @bind="_model.DefaultLanguage">
+                                <option value="ar-EG">العربية</option>
+                                <option value="en-GB">English</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            @_localizer["Roles"]
+                            <RadzenDropDown @bind-Value=@_model.GrantedRoles Data=@roles TextProperty="Name" ValueProperty="Id" AllowVirtualization="true"
+                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            Multiple=true Chips=true class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            @_localizer["Schools"]
+                            <RadzenDropDown @bind-Value=@_model.GrantedSchools Data=@schools TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                            Multiple=true Chips=true class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isActiveSwitch" @bind="_model.IsActive" />
+                                <label class="form-check-label" for="isActiveSwitch">
+                                    @_localizer["IsActive"]
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+                    @if (!string.IsNullOrWhiteSpace(_model.Id))
+                    {
+                        <AdminExternalLogins UserId="@_model.Id" />
+                        <hr />
+                    }
+                </div>
+                <div class="modal-footer">
+                    @if (!string.IsNullOrEmpty(_model.Name) && !string.IsNullOrWhiteSpace(_model.Name))
+                    {
+                        <button type="submit" class="submit-btn" disabled="@isProcessing">
+                            @if (isProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>@_localizer["Processing"]</span>
+                            }
+                            else
+                            {
+                                <span>@_localizer["Save"]</span>
+                            }
+                        </button>
+                    }
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" disabled="@isProcessing">@_localizer["Close"]</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="d-flex justify-content-center p-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <header>
+        <div class="p-2">
+            <h2>@_localizer["UsersList"]</h2>
+        </div>
+    </header>
+    <div class="p-2">
+        <RadzenBreadCrumb>
+            <ChildContent>
+                <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+                <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+                <RadzenBreadCrumbItem Text="@_localizer["UsersList"]" />
+            </ChildContent>
+        </RadzenBreadCrumb>
+    </div>
+    <div class="p-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 py-3">
+                        <a href="Account/Register" class="btn btn-primary" style="width:150px;">@_localizer["New"]</a>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search by username, email, name..." @bind="searchTerm" @oninput="(ChangeEventArgs e) => searchTerm = e.Value?.ToString() ?? string.Empty" />
+                            <span class="input-group-text"><span class="material-symbols-outlined">search</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">@_localizer["Users"] (@GetFilteredUsers().Count())</h5>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>@_localizer["Name"]</th>
+                                <th>@_localizer["UserName"]</th>
+                                <th>@_localizer["Email"]</th>
+                                <th>@_localizer["Status"]</th>
+                                <th>@_localizer["CreatedOn"]</th>
+                                <th>@_localizer["Action"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int index = 1;
+                                var filteredUsers = GetFilteredUsers();
+                                if (filteredUsers.Any())
+                                {
+                                    @foreach (var user in filteredUsers)
+                                    {
+                                        <tr>
+                                            <td>@index</td>
+                                            <td>
+                                                <span>@user.Name</span>
+                                            </td>
+                                            <td>
+                                                <strong>@user.UserName</strong>
+                                            </td>
+                                            <td>
+                                                <small>@user.Email</small>
+                                            </td>
+                                            <td>
+                                                <span class="@GetStatusBadge(user.IsActive)" style="font-size:12px;">@GetStatusText(user.IsActive)</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@user.CreatedOn.ToString("dd/MM/yyyy HH:mm tt")</small>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-link p-0 me-2" @onclick="() => Edit(user)" data-bs-toggle="modal" data-bs-target="#DetailsModal" title="@_localizer["Edit"]">
+                                                    <span class="material-symbols-outlined icon c-blue">edit</span>
+                                                </button>
+                                                <button type="button" class="btn btn-link p-0" @onclick="() => OpenPasswordModal(user)" data-bs-toggle="modal" data-bs-target="#ChangePasswordModal" title="@_localizer["ChangePassword"]">
+                                                    <span class="material-symbols-outlined icon c-orange">lock_reset</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        index++;
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fa fa-search me-2"></i>
+                                            No users found matching your search criteria.
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}

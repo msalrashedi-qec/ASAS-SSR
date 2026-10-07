@@ -1,0 +1,68 @@
+﻿@inject IConfiguration Configuration
+
+<!DOCTYPE html>
+<html lang="@(System.Globalization.CultureInfo.CurrentUICulture.Name + "-u-nu-latn")"
+      dir="@(System.Globalization.CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? "rtl" : "ltr")">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+   
+    <base href="@ApplicationPathResolver.GetBaseHref(Configuration, HttpContext?.Request)" />
+    <ResourcePreloader />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" media="all" />
+  
+    <!-- Browser and installed-app identity -->
+    <meta name="application-name" content="ASAS" />
+    <meta name="theme-color" content="#15394c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ASAS" />
+    <link rel="manifest" href="@Assets["manifest.webmanifest"]" />
+    <link rel="icon" type="image/png" sizes="192x192" href="@Assets["icons/app-icon-192.png"]" />
+    <link rel="apple-touch-icon" sizes="180x180" href="@Assets["icons/apple-touch-icon.png"]" />
+    <link rel="stylesheet" href="@Assets["css/bootstrap.min.css"]">
+    <link rel="stylesheet" href="@Assets["css/animate.min.css"]">
+
+    <!-- Radzen css -->
+    <RadzenTheme Theme="material" />
+
+    <!-- Main css -->
+    <link rel="stylesheet" href="@Assets["css/theme.css"]" media="all">
+    <link rel="stylesheet" href="@Assets["css/style.css"]" media="all">
+    <link rel="stylesheet" href="@Assets["css/print.css"]" media="print" />
+    <link rel="stylesheet" href="@Assets["Web.styles.css"]" />
+    <ImportMap />
+    <HeadOutlet />
+</head>
+
+<body id="app" class="@(System.Globalization.CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? "ar" : "en")">
+    <Routes @rendermode="PageRenderMode" />
+    <ReconnectModal />
+    
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
+
+    <!-- ************ Required JavaScript Files ************* -->
+    <script src="@Assets["js/bootstrap.bundle.min.js"]"></script>
+    <script src="@Assets["js/modernizr.js"]"></script>
+    <script src="@Assets["js/moment.js"]"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+
+    <!-- Main Js Required -->
+    <script src="@Assets["js/app.js"]"></script>
+    <script src="@Assets["js/apexcharts.min.js"]"></script>
+    <script src="@Assets["js/apex.js"]"></script>
+    <script src="@Assets["js/custom.js"]"></script>
+    <script src="@Assets["js/download.js"]"></script>
+</body>
+
+</html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}

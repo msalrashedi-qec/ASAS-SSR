@@ -1,0 +1,12 @@
+.anonymous-shell {
+    align-self: stretch;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.anonymous-content {
+    min-height: 100%;
+    width: 100%;
+}

@@ -1,0 +1,321 @@
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>@_localizer["Home"]</h2>
+</header>
+
+<div class="content-body pt-5">
+    <AuthorizeView Policy="@Policies.Parents.Create">
+        <Authorized>
+            <div class="pb-3">
+                <a href="parent-details" class="submit-btn px-3">
+                    @_localizer["NewParent"] <span class="material-symbols-outlined">add_circle</span>
+                </a>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+    <div class="row">
+        <div class="col-md-4 p-2">
+            <SearchFocusedDropDown PopupStyle="max-height:300px;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable;scrollbar-width:auto" @bind-Value=@search.StudentId Data=@students TextProperty="Name" ValueProperty="Id" Change="SearchStudentAsync"
+                            AllowVirtualization="true" AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="@_localizer["StudentName"]" class="form-control" />
+        </div>
+        <div class="col-md-4 p-2">
+            <SearchFocusedDropDown @bind-Value=@search.ParentId Data=@parents TextProperty="MobileName" ValueProperty="Id" Change="SearchParentAsync"
+                            AllowVirtualization="true" AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="@_localizer["ParentMobile"]" class="form-control" />
+        </div>
+        <div class="col-md-4 p-2">
+            <SearchFocusedDropDown @bind-Value=@search.ParentId Data=@parents TextProperty="NationalIDName" ValueProperty="Id" Change="SearchParentAsync"
+                            AllowVirtualization="true" AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="@_localizer["ParentNationalID"]" class="form-control" />
+        </div>
+        
+        @if (_parent != null && _parent.Id != Guid.Empty)
+        {
+            <div class="col-12 p-2">
+                <div class="overflow-auto mt-3 shadow-lg">
+                    <table class="table" style="margin-bottom: 0px;">
+                        <thead>
+                            <tr>
+                                <th>@_localizer["Name"]</th>
+                                <AuthorizeView Policy="@Policies.Students.Create">
+                                    <Authorized>
+                                        <th style="width:80px;">@_localizer["AddStudent"]</th>
+                                    </Authorized>
+                                </AuthorizeView>
+
+                                <AuthorizeView Policy="@Policies.DebitReceipts.Create">
+                                    <Authorized>
+                                        <th style="width:80px;">@_localizer["Payment"]</th>
+                                    </Authorized>
+                                </AuthorizeView>
+
+                                <AuthorizeView Policy="@Policies.RefundReceipts.Create">
+                                    <Authorized>
+                                        <th style="width:80px;">@_localizer["FeeRefund"]</th>
+                                    </Authorized>
+                                </AuthorizeView>
+
+                                <AuthorizeView Policy="@Policies.ParentReceipts.View">
+                                    <Authorized>
+                                        <th style="width:80px;">@_localizer["SummaryStatement"]</th>
+                                    </Authorized>
+                                </AuthorizeView>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <a href="parent-details/@_parent.Id">
+                                        @_parent.Name
+                                    </a>
+                                </td>
+                                <AuthorizeView Policy="@Policies.Students.Create">
+                                    <Authorized>
+                                        <td>
+                                            <a href="student-details/@_parent.Id">
+                                                <span class="material-symbols-outlined icon c-green pointer">
+                                                    person_add
+                                                </span>
+                                            </a>
+                                        </td>
+                                    </Authorized>
+                                </AuthorizeView>
+
+                                <AuthorizeView Policy="@Policies.DebitReceipts.Create">
+                                    <Authorized>
+                                        <td>
+                                            <a href="payment/@_parent.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    price_change
+                                                </span>
+                                            </a>
+                                        </td>
+                                    </Authorized>
+                                </AuthorizeView>
+                                
+                                <AuthorizeView Policy="@Policies.RefundReceipts.Create">
+                                    <Authorized>
+                                        <td>
+                                            <a href="refund-receipt/@_parent.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    currency_exchange
+                                                </span>
+                                            </a>
+                                        </td>
+                                    </Authorized>
+                                </AuthorizeView>
+                                
+                                <AuthorizeView Policy="@Policies.ParentReceipts.View">
+                                    <Authorized>
+                                        <td>
+                                            <a href="brief-account/parent/@_parent.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    receipt_long
+                                                </span>
+                                            </a>
+                                        </td>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-12 p-2">
+                @if (_parent.Students.Any(x=> x.SchoolId == _appStateService.SchoolId))
+                {
+                    <div class="overflow-auto">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>@_localizer["SN"]</th>
+                                    <th>@_localizer["Name"]</th>
+                                    <th>@_localizer["Class"]</th>
+                                    <th>@_localizer["Status"]</th>
+                                    <th style="width:80px;">@_localizer["SummaryStatement"]</th>
+                                    <th style="width:80px;">@_localizer["DetailedStatement"]</th>
+                                    <th style="width:80px;">@_localizer["AccountActivity"]</th>
+                                    <th style="width:80px;">@_localizer["StudyContract"]</th>
+                                    
+                                    <AuthorizeView Policy="@Policies.StudentDocuments.View">
+                                        <Authorized>
+                                            <th style="width:80px;">@_localizer["Documents"]</th>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    
+                                    <AuthorizeView Policy="@Policies.Subscriptions.Add">
+                                        <Authorized>
+                                            <th style="width:80px;">@_localizer["Subscriptions"]</th>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    
+                                    <AuthorizeView Policy="@Policies.Subscriptions.Remove">
+                                        <Authorized>
+                                            <th style="width:80px;">@_localizer["SubscriptionWithdrawal"]</th>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    
+                                    <AuthorizeView Policy="@Policies.Students.Withdraw">
+                                        <Authorized>
+                                            <th style="width:80px;">@_localizer["Withdrawal"]</th>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    
+                                    <AuthorizeView Policy="@Policies.Students.Create">
+                                        <Authorized>
+                                            <th style="width:80px;">@_localizer["Rejoin"]</th>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                    
+                                    <AuthorizeView Policy="@Policies.Requests.ViewLegalCases">
+                                        <Authorized>
+                                            <th style="width:80px;">@_localizer["LegalCases"]</th>
+                                        </Authorized>
+                                    </AuthorizeView>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var student in _parent.Students.OrderBy(x => x.LevelSN).ThenBy(x => x.ClassSN))
+                                {
+                                    <tr>
+                                        <td>@student.Code</td>
+                                        <td>
+                                            <a href="student-details/@student.ParentId/@student.Id">
+                                                @student.Name
+                                            </a>
+                                        </td>
+                                        <td>@(_localizer["SelectedLanguage"] == "ar" ? student.ClassNameAr : student.ClassName)</td>
+                                        <td>
+                                            <span class="tag" style="background-color:@student.ColorCode">
+                                                @(_localizer["SelectedLanguage"] == "ar" ? student.StatusNameAr : student.StatusName)
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <a href="brief-account/student/@student.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    receipt_long
+                                                </span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="detailed-account/@student.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    request_quote
+                                                </span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="student-account-transactions/@student.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    finance
+                                                </span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="student-contract/@student.Id">
+                                                <span class="material-symbols-outlined icon c-blue pointer">
+                                                    contract_edit
+                                                </span>
+                                            </a>
+                                        </td>
+
+                                        <AuthorizeView Policy="@Policies.StudentDocuments.View">
+                                            <Authorized>
+                                                <td>
+                                                    <a href="student-documents/@student.Id">
+                                                        <span class="material-symbols-outlined icon c-blue pointer">
+                                                            docs
+                                                        </span>
+                                                    </a>
+                                                </td>
+                                            </Authorized>
+                                        </AuthorizeView>
+
+                                        <AuthorizeView Policy="@Policies.Subscriptions.Add">
+                                            <Authorized>
+                                                <td>
+                                                    <a href="student-subscription/@student.Id">
+                                                        <span class="material-symbols-outlined icon c-green pointer">
+                                                            tv_options_edit_channels
+                                                        </span>
+                                                    </a>
+                                                </td>
+                                            </Authorized>
+                                        </AuthorizeView>
+
+                                        <AuthorizeView Policy="@Policies.Subscriptions.Remove">
+                                            <Authorized>
+                                                <td>
+                                                    @if (student.StatusId >= 10 && student.StatusId < 30)
+                                                    {
+                                                        <a href="student-subscription-withdrawal/@student.Id">
+                                                            <span class="material-symbols-outlined icon c-orange pointer">
+                                                                playlist_remove
+                                                            </span>
+                                                        </a>
+                                                    }
+                                                </td>
+                                            </Authorized>
+                                        </AuthorizeView>
+
+                                        <AuthorizeView Policy="@Policies.Students.Withdraw">
+                                            <Authorized>
+                                                <td>
+                                                    @if (student.StatusId >= 10 && student.StatusId < 30)
+                                                    {
+                                                        <a href="student-withdrawal/@student.Id">
+                                                            <span class="material-symbols-outlined icon c-red pointer">
+                                                                person_off
+                                                            </span>
+                                                        </a>
+                                                    }
+                                                </td>
+                                            </Authorized>
+                                        </AuthorizeView>
+
+                                        <AuthorizeView Policy="@Policies.Students.Create">
+                                            <Authorized>
+                                                <td>
+                                                    @if (student.StatusId >= 30)
+                                                    {
+                                                        <a href="student-rejoin/@student.Id">
+                                                            <span class="material-symbols-outlined icon c-green pointer">
+                                                                how_to_reg
+                                                            </span>
+                                                        </a>
+                                                    }
+                                                </td>
+                                            </Authorized>
+                                        </AuthorizeView>
+
+                                        <AuthorizeView Policy="@Policies.Requests.ViewLegalCases">
+                                            <Authorized>
+                                                <td>
+                                                    <a href="student-cases/@student.Id">
+                                                        <span class="material-symbols-outlined icon c-blue pointer">
+                                                            balance
+                                                        </span>
+                                                    </a>
+                                                </td>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-2 bg-light-warning text-center">
+                        @_localizer["NoStudentsFoundForThisParent"]
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,83 @@
+@page "/receipt-edit/{ParentId:guid}/{ReceiptId:guid}"
+@attribute [Authorize(Policy = Policies.DebitReceipts.Edit)]
+
+<PageTitle>تعديل سند القبض</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>تعديل سند القبض</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="@($"parent-receipts/{ParentId}")" Text="سندات ولي الأمر" />
+            <RadzenBreadCrumbItem Text="تعديل السند" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+@if (!isLoading && receipt is null)
+{
+    <div class="content-body p-4 text-center bg-light-warning">لم يتم العثور على السند المطلوب.</div>
+}
+else if (receipt is not null)
+{
+    <div class="content-body receipt-edit-page">
+        <section class="edit-title">
+            <div><span>رقم السند</span><strong dir="ltr">#@receipt.SN.ToString("D6")</strong></div>
+            <div><span>ولي الأمر</span><strong>@parentName</strong></div>
+            <div><span>الطالب</span><strong>@studentName</strong></div>
+        </section>
+
+        <fieldset disabled="@isSaving">
+        <section class="edit-card">
+            <div class="section-heading"><span class="material-symbols-outlined">edit_note</span><div><h3>بيانات السند</h3><p>عدّل البيانات ثم احفظ التغييرات</p></div></div>
+            <div class="row form-grid">
+                <div class="col-md-4"><label>تاريخ السند</label><RadzenDatePicker @bind-Value="receiptDate" DateFormat="dd/MM/yyyy" /></div>
+                <div class="col-md-4"><label>طريقة الدفع</label><RadzenDropDown TValue="byte" @bind-Value="paymentMethodId" Data="paymentMethods" TextProperty="Name" ValueProperty="Id" Change="PaymentMethodChanged" class="form-control" /></div>
+                @if (IsCheque)
+                {
+                    <div class="col-md-4"><label>اسم البنك</label><RadzenDropDown TValue="string" @bind-Value="bankName" Data="banks" TextProperty="Name" ValueProperty="Name" AllowFiltering="true" class="form-control" /></div>
+                    <div class="col-md-4"><label>رقم الشيك</label><input class="form-control" @bind="chequeNo" /></div>
+                    <div class="col-md-4"><label>تاريخ الشيك</label><RadzenDatePicker @bind-Value="chequeDate" DateFormat="dd/MM/yyyy" class="form-control" /></div>
+                }
+            </div>
+        </section>
+
+        <section class="edit-card">
+            <div class="section-heading"><span class="material-symbols-outlined">receipt_long</span><div><h3>بنود السند</h3><p>وزّع قيمة السند على البنود غير المسددة؛ أدخل صفرًا لإلغاء السداد عن بند</p></div></div>
+            <div class="table-responsive">
+                <table class="table detail-table">
+                    <thead><tr><th>الفصل</th><th>الخدمة</th><th>التصنيف</th><th>المتاح للسداد</th><th>المبلغ</th></tr></thead>
+                    <tbody>
+                        @foreach (var item in details)
+                        {
+                            <tr><td>@item.Semester</td><td><strong>@item.Service</strong></td><td>@item.Category</td><td>@item.Available.ToString("N2")</td><td><RadzenNumeric TValue="double" @bind-Value="item.Amount" Min="0" Step="0.01" Format="#,##0.##" class="amount-input" /></td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="edit-total"><span>قيمة السند الأصلية</span><strong dir="ltr">@originalTotal.ToString("N2")</strong></div>
+            <div class="edit-total"><span>إجمالي التوزيع</span><strong dir="ltr">@ReportFormatter.Amount(details.Sum(x => Math.Max(0, x.Amount))) </strong></div>
+        </section>
+
+        </fieldset>
+
+        @if (!string.IsNullOrWhiteSpace(validationMessage))
+        {
+            <div class="edit-validation"><span class="material-symbols-outlined">error</span>@validationMessage</div>
+        }
+
+        <div class="form-actions">
+            <a class="btn btn-light" href="parent-receipts/@ParentId">@_localizer["Cancel"]</a>
+            <button type="button" class="submit-btn" disabled="@isSaving" @onclick="SaveAsync">
+                @if (isSaving) { <span class="spinner-border spinner-border-sm"></span> }
+                <span class="material-symbols-outlined">save</span> حفظ التعديلات
+            </button>
+        </div>
+    </div>
+}

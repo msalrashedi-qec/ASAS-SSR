@@ -1,0 +1,49 @@
+﻿<div id="recovery-panel-1" style="@PanelStyle;min-height:100%;">
+    <div class="auth-header">
+        <div class="page-badge">
+            <span class="material-symbols-outlined">mail</span>
+            <span>@_localizer["SendRecoveryCode"]</span>
+        </div>
+       @*  <h2>
+            <span>@_localizer["ForgotPassword"]</span>
+        </h2> *@
+        <p>
+            <span>@_localizer["EnterEmailForVerification"]</span>
+        </p>
+    </div>
+
+    <EditForm Model="Input" FormName="forgot-password" method="post" OnValidSubmit="OnValidSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="bd-callout bd-callout-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+        
+        <div class="mb-4">
+            <label class="form-label">
+                <span>@_localizer["Email"]</span>
+            </label>
+            <div class="input-icon-wrap">
+                <span class="material-symbols-outlined field-icon">mail</span>
+                <InputText type="email" required class="form-control" @bind-Value="Input.Email" placeholder="@_localizer["EnterYourEmail"]" />
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn w-100" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>@_localizer["Processing"]</span>
+            }
+            else
+            {
+                <span>@_localizer["SendVerificationCode"]</span>
+            }
+
+        </button>
+    </EditForm>
+</div>
+

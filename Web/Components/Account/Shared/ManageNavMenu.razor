@@ -1,0 +1,38 @@
+﻿@using Microsoft.AspNetCore.Identity
+
+
+@inject SignInManager<ApplicationUser> SignInManager
+
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage" Match="NavLinkMatch.All">@_localizer["Profile"]</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/Email">@_localizer["Email"]</NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/ChangePassword">@_localizer["Password"]</NavLink>
+    </li>
+    @* @if (hasExternalLogins)
+    {
+        <li class="nav-item">
+            <NavLink class="nav-link" href="Account/Manage/ExternalLogins">@_localizer["ExternalLogins"]</NavLink>
+        </li>
+    } *@
+   @*  <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/TwoFactorAuthentication">@_localizer["TwoFactorAuthentication"]</NavLink>
+    </li> *@
+    <li class="nav-item">
+        <NavLink class="nav-link" href="Account/Manage/Passkeys">@_localizer["Passkeys"]</NavLink>
+    </li>
+   
+</ul>
+
+@code {
+    private bool hasExternalLogins;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    }
+}

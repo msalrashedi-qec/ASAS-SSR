@@ -1,0 +1,273 @@
+﻿@page "/wfprocess-details/{id:guid}/{processId:guid}"
+@using Web.Components.Pages.Business
+@using Web.Components.Pages.Discounts
+@using Web.Components.Partial.WF
+
+
+@attribute [Authorize]
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<div class="px-2">
+   
+    <div class="bd-callout bd-callout-info">
+        <div class="row">
+            <div class="col-md-3 p-2 text-center">
+                <b> @_localizer["ProcessId"] : </b><a href="#" style="direction:ltr;" data-bs-toggle="modal" data-bs-target="#TrackProcessModal"> <label style="direction:ltr !important;">@process.RefNo</label> </a>
+                <div class="modal fade" id="TrackProcessModal" tabindex="-1" aria-labelledby="TrackProcessModalLabel" aria-hidden="true" data-bs-focus="false">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title" id="TrackProcessModalLabel"> @_localizer["Details"]</h2>
+                                <div style="text-align: left">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                                <TrackRequest ProcessId="@process.ProcessId"></TrackRequest>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5 p-2 text-center">
+                <b> @_localizer["Task"] : </b> @process.CurrentTaskName
+            </div>
+            <div class="col-md-3 p-2 text-center">
+                <b> @_localizer["Status"] : </b> @(_localizer["SelectedLanguage"] == "ar" ? process.StatusNameAr : process.StatusName)
+            </div>
+            <div class="col-md-1 p-2" style="text-align:end;">
+                <span class="material-symbols-outlined icon c-primary pointer print-display-none" onclick="window.print();">
+                    print
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="content-body">
+    <div class="container-fluid">
+        <div class="workflow-details-layout @(process.WorkflowTypeId == 1 ? "" : "actions-only")">
+            @if (process.WorkflowTypeId == 1)
+            {
+                <main class="workflow-main">
+                    <DiscountRequestDetails ProcessId="@ProcessId" ProcessStatus="@process.StatusId" Permissions="@process.Permissions" />
+                </main>
+            }
+
+            <aside class="workflow-actions print-display-none" aria-label="@_localizer["Action"]">
+                <section class="action-card">
+                    <div class="action-card-header">
+                        <span class="action-card-icon material-symbols-outlined" aria-hidden="true">task_alt</span>
+                        <div>
+                            <h4>@_localizer["Action"]</h4>
+                            <span class="action-task-name">@process.CurrentTaskName</span>
+                        </div>
+                    </div>
+
+                    <div class="action-card-body">
+                <div class="modal fade" id="CancelModal" tabindex="-1" aria-labelledby="CancelModalLabel" aria-hidden="true" data-bs-focus="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title" id="CancelModalLabel"> @_localizer["Delete"]</h2>
+                                <div style="text-align: left">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                            </div>
+                            <EditForm Model="action" OnValidSubmit="CancelAsync">
+                                <DataAnnotationsValidator />
+                                <div class="modal-body">
+                                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                                    <div class="p-2">
+                                        @_localizer["Comments"]: <span class="c-red">[@_localizer["Required"]]</span>
+                                        <textarea class="form-control" required @bind=action.Comments @bind:event="oninput"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer center">
+                                    @if (process.StatusId == 2)
+                                    {
+                                        <button type="submit" class="btn btn-danger" disabled="@(string.IsNullOrEmpty(action.Comments) || isProcessing)">
+                                            @if (isProcessing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>@_localizer["Processing"]</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@_localizer["Delete"]</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="RejectModal" tabindex="-1" aria-labelledby="RejectModalLabel" aria-hidden="true" data-bs-focus="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title" id="RejectModalLabel"> @_localizer["Reject"]</h2>
+                                <div style="text-align: left">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                            </div>
+                            <EditForm Model="action" OnValidSubmit="RejectAsync">
+                                <DataAnnotationsValidator />
+                                <div class="modal-body">
+                                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                                    <div class="p-2">
+                                        @_localizer["Comments"]: <span class="c-red">[@_localizer["Required"]]</span>
+                                        <textarea class="form-control" required @bind=action.Comments @bind:event="oninput"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer center">
+                                    @if (process.StatusId == 2)
+                                    {
+                                        <button type="submit" class="submit-btn" disabled="@(string.IsNullOrEmpty(action.Comments) || isProcessing)">
+                                            @if (isProcessing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>@_localizer["Processing"]</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@_localizer["Reject"]</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="ReworkModal" tabindex="-1" aria-labelledby="ReworkModalLabel" aria-hidden="true" data-bs-focus="false">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title" id="ReworkModalLabel"> @_localizer["Rework"]</h2>
+                                <div style="text-align: left">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                            </div>
+                            <EditForm Model="action" OnValidSubmit="ReWorkAsync">
+                                <DataAnnotationsValidator />
+                                <div class="modal-body">
+                                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                                    <div class="p-2">
+                                        @_localizer["Comments"]: <span class="c-red">[@_localizer["Required"]]</span>
+                                        <InputTextArea class="form-control" required @bind-Value=action.Comments></InputTextArea>
+                                    </div>
+                                    <div class="p-2">
+                                        @_localizer["ReturnTo"]: <span class="c-red">[@_localizer["Required"]]</span>
+                                        <RadzenDropDown required @bind-Value=@action.ReturnTaskId Data=@previousTasks TextProperty="Name" ValueProperty="Id" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer center">
+                                    @if (process.StatusId == 2)
+                                    {
+                                        <button type="submit" class="submit-btn" disabled="@(string.IsNullOrEmpty(action.Comments) || isProcessing)">
+                                            @if (isProcessing)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span>@_localizer["Processing"]</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@_localizer["Rework"]</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+
+                <EditForm Model="action" OnValidSubmit="ApproveAsync" class="action-form">
+                    <DataAnnotationsValidator />
+
+                    <div class="action-field">
+                        <label for="workflow-comments">@_localizer["Comments"]</label>
+                        <InputTextArea id="workflow-comments" class="form-control action-comments" @bind-Value=action.Comments></InputTextArea>
+                    </div>
+                    <div class="action-field">
+                        <label>@_localizer["Attachment"]</label>
+                        <div class="action-upload">
+                            <span class="material-symbols-outlined" aria-hidden="true">attach_file</span>
+                            <InputFile OnChange="@UploadFile" multiple />
+                        </div>
+                        @if (action.Attachments.Any())
+                        {
+                            <div class="attachment-list">
+                                @foreach (var item in action.Attachments)
+                                {
+                                    <div class="attachment-item">
+                                        <span class="attachment-name">@item.FileName</span>
+                                        <a href="#" class="attachment-remove" @onclick="() => action.Attachments.Remove(item)" @onclick:preventDefault aria-label="@_localizer["Remove"]">
+                                            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="action-buttons">
+                        @if (process.StatusId == 2)
+                        {
+                            if (process.CurrentTaskSN == 0)
+                            {
+                                <button type="submit" class="btn btn-primary action-primary">
+                                    <span class="material-symbols-outlined" aria-hidden="true">send</span>
+                                    @_localizer["ReSubmit"]
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit" class="btn btn-success action-primary">
+                                    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                                    @_localizer["Approve"]
+                                </button>
+                            }
+
+                            if (process.Permissions.Any(x => x.Id == 1001))
+                            {
+                                <button type="button" class="btn btn-warning" @onclick="() => GetPreviousTasksAsync()" data-bs-toggle="modal" data-bs-target="#ReworkModal">
+                                    <span class="material-symbols-outlined" aria-hidden="true">undo</span>
+                                    @_localizer["Rework"]
+                                </button>
+                            }
+                            if (process.Permissions.Any(x => x.Id == 1002))
+                            {
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#RejectModal">
+                                    <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+                                    @_localizer["Reject"]
+                                </button>
+                            }
+                            if (process.Permissions.Any(x => x.Id == 1003))
+                            {
+                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#CancelModal">
+                                    <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                                    @_localizer["Withdraw"]
+                                </button>
+                            }
+                        }
+                    </div>
+                </EditForm>
+                    </div>
+                </section>
+            </aside>
+        </div>
+
+        @if (process.Histories.Any())
+        {
+            <WfHistoryViewer Histories="@process.Histories" />
+        }
+    </div>
+    
+</div>
+
+

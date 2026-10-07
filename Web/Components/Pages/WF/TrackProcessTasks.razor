@@ -1,0 +1,128 @@
+﻿@page "/track-process-tasks"
+@attribute [Authorize]
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h4>
+            @_localizer["TrackProcess"]
+        </h4>
+</header>
+<div class="p-2">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["TrackProcess"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</div>
+<div class="content-body">
+
+    <div class="card m-2">
+        <div class="card-header">
+            @_localizer["Search"]
+        </div>
+        <div class="card-body">
+            <EditForm Model="search" OnSubmit="GetListAsync">
+                <div class="row">
+                    
+                    <div class="col-md-2 p-2">
+                        <InputText @bind-Value=@search.RefNo placeholder="@_localizer["ProcessId"]" class="form-control text-center"></InputText>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        <RadzenDropDown @bind-Value=@selectedTypes Data=@types TextProperty="Name" ValueProperty="Id"
+                                        Multiple=true Placeholder="@_localizer["Type"]" Chips=true class="form-control" />
+                    </div>
+                    <div class="col-md-3 p-2">
+                        <RadzenDropDown @bind-Value=@selectedStatuses Data=@statuses TextProperty="Name" ValueProperty="Id"
+                                        Multiple=true Placeholder="@_localizer["Status"]" Chips=true class="form-control" />
+                    </div>
+
+                    <div class="col-md-2 p-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            @_localizer["Search"]
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+    @if (!isLoading)
+    {
+        <div class="p-3">
+            <div class="row bg-body-tertiary" style="font-size:small;">
+                <div class="col-4">
+                    @_localizer["PageNo"]
+                    <select class="pagination-select" @bind-value="PageIndex" @onchange="GetListAsync" @bind-value:event="oninput">
+                        @for (int i = 1; i <= TotalPages; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-4 text-center">
+                    @_localizer["RowsCount"] : @totalRows
+                </div>
+                <div class="col-4 align-content-end">
+                    @_localizer["RowsPerPage"]
+                    <select class="pagination-select" @bind-value="PageSize" @onchange="GetListAsync" @bind-value:event="oninput">
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="500">500</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-auto">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@_localizer["ProcessId"]</th>
+                            <th>@_localizer["Type"]</th>
+                            <th>@_localizer["RequestedFor"]</th>
+                            <th>@_localizer["CurrentTask"]</th>
+                            <th>@_localizer["Status"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = PageSize * (PageIndex - 1) + 1;
+                            if (workflows != null)
+                            {
+                                foreach (var wf in workflows)
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td>
+                                            <a href="process-details/@wf.WfProcessId">
+                                                @wf.RefNo
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @wf.TypeName
+                                        </td>
+                                        <td>
+                                            @wf.RequesterName
+                                        </td>
+                                        <td>
+                                            @wf.TaskName
+                                        </td>
+                                        <td>
+                                            <span class="tag" style="background-color:@wf.ColorCode">
+                                                @wf.StatusName
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

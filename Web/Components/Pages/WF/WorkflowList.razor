@@ -1,0 +1,132 @@
+﻿@page "/workflows"
+@attribute [Authorize]
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="wf" OnValidSubmit="SaveDataAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="p-2">
+                        @_localizer["Type"]:
+                        <select class="form-select user-select-all" @bind="wf.TypeId">
+                            @foreach (var type in wfTypes)
+                            {
+                                <option value="@type.Id">
+                                    @type.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="p-2">
+                        @_localizer["Version"]:
+                        <InputText class="form-control" @bind-Value="wf.Version" maxlength="50" />
+                    </div>
+                   
+                    <div class="p-2">
+                        @_localizer["IsActive"]:
+                        <input class="form-check-input" type="checkbox" @bind="wf.IsActive" id="flexCheckDefault">
+                    </div>
+                </div>
+                <div class="modal-footer center">
+                    <button type="submit" class="submit-btn" disabled="@isProcessing">
+                        @if (isProcessing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>@_localizer["Processing"]</span>
+                        }
+                        else
+                        {
+                            <span>@_localizer["Save"]</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header >
+    <div class="p-2">
+        <h4>
+            @_localizer["Workflow"]
+        </h4>
+    </div>
+</header>
+<div class="p-2">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["Workflow"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</div>
+<div class="content-body">
+    <div class="p-4">
+        <button type="button" class="submit-btn" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+            @_localizer["New"]
+        </button>
+    </div>
+    <div class="card mx-3">
+        <div class="card-body p-0">
+            <div class="overflow-auto">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@_localizer["Type"]</th>
+                            <th>@_localizer["Version"]</th>
+                            <th>@_localizer["IsActive"]</th>
+                            <th>@_localizer["Action"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 1;
+                            if (workFlows != null)
+                            {
+                                foreach (var item in workFlows)
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td>@item.TypeName</td>
+                                        <td>@item.Version</td>
+                                        <td><input class="form-check-input" type="checkbox" id="flexCheckCheckedDisabled" checked="@item.IsActive" disabled></td>
+                                        <td>
+                                            <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                                                edit
+                                            </span>
+                                            <a href="wftasks/@item.Id">
+                                                <span class="material-symbols-outlined icon c-red">
+                                                    timeline
+                                                </span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</div>

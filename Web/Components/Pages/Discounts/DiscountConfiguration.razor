@@ -1,0 +1,161 @@
+﻿@page "/discount-config/{id:int}"
+
+<PageTitle>Discount Configuation</PageTitle>
+
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body px-4">
+                <EditForm Model="_model" OnValidSubmit="SaveAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="row">
+                        <div class="col-md-4 p-2">
+                            @_localizer["Semester"]
+                            <RadzenDropDown @bind-Value=@_model.SemesterId Data=@semesters TextProperty="@_localizer["FieldName"]" ValueProperty="Id" class="form-control" />
+                        </div>
+
+                        <div class="col-md-4 p-2">
+                            @_localizer["From"]:
+                            <InputText class="form-control" @bind-Value="_model.FromRange" maxlength="10" />
+                        </div>
+                        <div class="col-md-4 p-2">
+                            @_localizer["To"]:
+                            <InputText class="form-control" @bind-Value="_model.ToRange" maxlength="10" />
+                        </div>
+                        <div class="col-md-4 p-2">
+                            @_localizer["DiscountPercentage"] %:
+                            <InputNumber class="form-control" @bind-Value="_model.Amount" maxlength="10" />
+                        </div>
+                        <div class="col-md-4 p-2">
+                            @_localizer["AdditionalFixedAmount"]:
+                            <InputNumber class="form-control" @bind-Value="_model.AdditionalFixedAmount" maxlength="10" />
+                        </div>
+                        <div class="col-12 p-2">
+                            @_localizer["Comments"]
+                            <InputTextArea @bind-Value="_model.Comments" id="Comments" class="form-control bg-light-warning" MaxLength="1000" />
+                        </div>
+                        <hr />
+                        <div class="text-center pb-3">
+                            <button type="submit" disabled="@isProcessing" class="btn btn-primary" style="margin-top:30px;">
+                                @_localizer["Save"]
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="DeleteModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="DeleteModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DeleteModalLabel">@_localizer["Delete"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <div class="modal-body">
+                <div class="py-3 c-red"> @_model.Comments</div>
+                @_localizer["ConfirmDelete"]
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@_localizer["Cancel"]</button>
+                <button class="btn btn-danger" @onclick="DeleteAsync">
+                    @_localizer["Delete"]
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+           <h2>
+            @_localizer["Configuration"]
+        </h2>
+</header>
+<RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Path="discount-management" Text="@_localizer["ManageDiscounts"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["Configuration"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+<div class="content-body">
+
+    <div class="p-4">
+        <button type="button" class="btn btn-outline-primary" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+            @_localizer["New"]
+        </button>
+
+        <div class="overflow-auto pt-3">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@_localizer["Semester"]</th>
+                        <th>@_localizer["From"]</th>
+                        <th>@_localizer["To"]</th>
+                        <th>@_localizer["DiscountPercentage"] %</th>
+                        <th>@_localizer["AdditionalFixedAmount"]</th>
+                        <th>@_localizer["Comments"]</th>
+                        <th>@_localizer["Action"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var item in discount.Details)
+                        {
+                            <tr>
+                                <td>@(index++)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.SemesterNameAr : item.SemesterName)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.FromRange : item.FromRange)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.ToRange : item.ToRange)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.Amount : item.Amount) %</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.AdditionalFixedAmount : item.AdditionalFixedAmount)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.Comments : item.Comments)</td>
+                                
+                                <td>
+                                    <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal" title="@_localizer["Edit"]">
+                                        edit
+                                    </span>
+                                    <span class="material-symbols-outlined icon c-red pointer" @onclick="async () => Edit(item)" data-bs-toggle="modal" data-bs-target="#DeleteModal">
+                                        delete
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+
+

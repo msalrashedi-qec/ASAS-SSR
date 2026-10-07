@@ -1,0 +1,94 @@
+﻿@page "/tax-management"
+
+
+@attribute [Authorize]
+
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>
+            @_localizer["ManageTax"]
+        </h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["ManageTax"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <div class="p-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>
+                    @_localizer["Details"]
+                </h3>
+            </div>
+            <div class="card-body">
+                <EditForm Model="_model" OnValidSubmit="SaveDataAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="row">
+                        <div class="col-md-3 p-2">
+                            @_localizer["Service"]:
+                            <RadzenDropDown @bind-Value=@_model.ServiceId Data=@services Change="GetListAsync" TextProperty="@_localizer["FieldName"]" ValueProperty="Id" class="form-control" />
+                        </div>
+                        <div class="col-md-5 p-2">
+                            @_localizer["Nationality"]:
+                            <RadzenDropDown @bind-Value=@_model.Nationalities Data=@nationalities TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                            Multiple=true Chips=true class="form-control" />
+                        </div>
+                        <div class="col-md-3 p-2">
+                            @_localizer["TaxValue"]:
+                            <InputNumber @bind-Value=@_model.VAT class="form-control" />
+                        </div>
+                        <div class="col-md-1 p-2">
+                            <button type="submit" class="btn btn-primary w-100 mt-4">
+                                @_localizer["Save"]
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+       
+        <div class="overflow-auto pt-3">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@_localizer["Service"]</th>
+                        <th>@_localizer["Nationality"]</th>
+                        <th>@_localizer["TaxValue"]</th>
+                        <th>@_localizer["Action"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                        foreach (var item in vats)
+                        {
+                            <tr>
+                                <td>@(index++)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.ServiceNameAr : item.ServiceName)</td>
+                                <td>@(_localizer["SelectedLanguage"] == "ar" ? item.NationalityNameAr : item.NationalityName)</td>
+                                <td>@item.VAT</td>
+                                <td>
+                                    <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" >
+                                        edit
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>

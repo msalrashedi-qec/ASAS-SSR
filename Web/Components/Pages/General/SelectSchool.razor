@@ -1,0 +1,37 @@
+﻿@page "/select-school"
+@layout AnonymousLayout
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <header>@_localizer["SelectSchool"]</header>
+                </div>
+                <EditForm Model="school" OnSubmit="SetSelectedSchool">
+                    <div class="card-body">
+                        <div class="p-2">
+                            @_localizer["School"]:
+                            <InputSelect class="form-control" required @bind-Value="selectedSchoolId">
+                                @foreach (var item in schools)
+                                {
+                                    <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="submit-btn w-100">
+                            @_localizer["Select"]
+                        </button>
+                    </div>
+                </EditForm>
+                
+            </div>
+           
+        </div>
+    </div>
+</div>
+

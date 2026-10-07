@@ -1,0 +1,33 @@
+﻿@implements IDisposable
+
+<AuthorizeView>
+    <Authorized>
+        <div class="nav-item dropdown">
+            <a class="nav-link " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" @onclick:preventDefault>
+                <img class="profile-photo" src="images/user/Default.png" alt="User">
+            </a>
+            <div class="dropdown-menu" style="min-width:300px;">
+                <div class="row pb-3">
+                    <div class="col-4 p-2 text-center">
+                        <img class="profile-photo" src="images/user/Default.png" alt="User">
+                    </div>
+                    <div class="col-8 p-2 pt-4 text-center">
+                        <a href="Account/Manage" class="btn btn-info">@(_displayName ?? context.User.Identity?.Name)</a>
+                    </div>
+                </div>
+                <div class="p-3">
+                    <form action="Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                        <button type="submit" class="btn btn-danger w-100 d-block">
+                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> @_localizer["LogOut"]
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+

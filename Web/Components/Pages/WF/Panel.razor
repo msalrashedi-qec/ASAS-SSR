@@ -1,0 +1,28 @@
+﻿@page "/wf-panel"
+@attribute [Authorize]
+
+<header>
+    <h2>@_localizer["Workflow"]</h2>
+</header>
+<div class="content-body">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mt-3 animate__animated animate__fadeInUp">
+        <a href="workflows">
+            <div class="cpanel-box">
+                <span class="material-symbols-outlined">timeline</span>
+                <h5>@_localizer["Workflow"]</h5>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6 mt-3 animate__animated animate__fadeInUp">
+        <a href="all-wf-processes">
+            <div class="cpanel-box">
+                <span class="material-symbols-outlined">format_list_numbered</span>
+                <h5>@_localizer["WfProcesses"]</h5>
+            </div>
+        </a>
+    </div>
+        </div>
+    </div>
+</div>

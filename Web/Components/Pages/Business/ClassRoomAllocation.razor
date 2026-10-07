@@ -1,0 +1,269 @@
+@page "/classroom-allocation"
+@attribute [Authorize]
+
+<header>
+    <h2>@T("Classroom Allocation", "تسكين الطلاب في الفصول الدراسية")</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Text="@T("Classroom allocation", "تسكين الفصول")" />
+        </ChildContent>
+</RadzenBreadCrumb>
+
+<div class="content-body classroom-allocation-page">
+    <div class="p-4">
+        @if (isLoading)
+        {
+            <LoadingBar />
+        }
+        else if (rooms.Count == 0)
+        {
+            <div class="empty-setup">
+                <span class="material-symbols-outlined">meeting_room</span>
+                <h3>@T("No classrooms are configured", "لا توجد فصول دراسية معرفة في اعدادات النظام")</h3>
+                <p>@T("Create the school classrooms first, then return to allocate students.", "أضف الفصول الدراسية أولاً ثم عد لتسكين الطلاب.")</p>
+                <a class="btn manage-link" href="classrooms">@T("Manage classrooms", "إدارة الفصول الدراسية")</a>
+            </div>
+        }
+        else
+        {
+            <div class="classroom-workspace">
+                <section class="students-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">@T("Waiting list", "قائمة الانتظار")</span>
+                            <h3>@T("Unallocated students", "الطلاب غير المسكنين")</h3>
+                        </div>
+                        <span class="count-pill">@FilteredUnallocatedRows.Count()</span>
+                    </div>
+                    <div class="filter-grid">
+                        <label>
+                            <span>@T("Level", "المرحلة")</span>
+                            <select class="form-control" value="@filterLevelId" @onchange="FilterLevelChanged">
+                                <option value="0">@T("All levels", "كل المراحل")</option>
+                                @foreach (var level in levels)
+                                {
+                                    <option value="@level.Id">@Localized(level.Name, level.NameAr)</option>
+                                }
+                            </select>
+                        </label>
+                        <label>
+                            <span>@T("Grade", "الصف")</span>
+                            <select class="form-control" value="@filterClassId" @onchange="FilterClassChanged" disabled="@(filterLevelId == 0)">
+                                <option value="0">@T("All grades", "كل الصفوف")</option>
+                                @foreach (var schoolClass in FilterClasses)
+                                {
+                                    <option value="@schoolClass.Id">@Localized(schoolClass.Name, schoolClass.NameAr)</option>
+                                }
+                            </select>
+                        </label>
+                        <label class="student-search">
+                            <span>@T("Student number", "رقم الطالب")</span>
+                            <span class="search-input">
+                                <span class="material-symbols-outlined">search</span>
+                                <input @bind="studentNumberFilter" @bind:event="oninput" placeholder="@T("Enter student number", "أدخل رقم الطالب")" />
+                            </span>
+                        </label>
+                    </div>
+                    <div class="students-tools">
+                        <label class="select-all">
+                            <input type="checkbox" checked="@AreAllVisibleSelected" @onchange="ToggleAllVisible" disabled="@(!FilteredUnallocatedRows.Any())" />
+                            <span>@T("Select all matching students", "تحديد جميع الطلاب المطابقين")</span>
+                        </label>
+                        <span>@string.Format(T("{0} results", "{0} نتائج"), FilteredUnallocatedRows.Count())</span>
+                    </div>
+                    <div class="students-table-wrap">
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th class="check-column"></th>
+                                    <th>@T("Student no.", "رقم الطالب")</th>
+                                    <th>@T("Student", "اسم الطالب")</th>
+                                    <th>@T("Level / grade", "المرحلة والصف")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in FilteredUnallocatedRows)
+                                {
+                                    var isSelected = selectedContractIds.Contains(row.ContractId);
+                                    <tr class="@(isSelected ? "selected draggable-student" : null)"
+                                        draggable="@(isSelected ? "true" : "false")"
+                                        title="@(isSelected ? T("Drag the selected students to the classroom", "اسحب الطلاب المحددين إلى مربع الفصل") : null)"
+                                        @ondragstart="() => BeginDraggingSelection(row.ContractId)"
+                                        @ondragend="EndDraggingSelection"
+                                        @onclick="() => ToggleStudent(row.ContractId)"><td class="check-column" @onclick:stopPropagation="true"><input type="checkbox" checked="@isSelected" @onchange="_ => ToggleStudent(row.ContractId)" /></td><td><span class="student-number">@row.StudentNumber</span></td><td><strong>@row.StudentName</strong><small>@row.GenderName</small></td><td><span class="level-text">@row.LevelName</span><small>@row.ClassName</small></td></tr>
+                                }
+                                @if (!FilteredUnallocatedRows.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4">
+                                            <div class="empty-students">
+                                                <span class="material-symbols-outlined">how_to_reg</span>
+                                                <strong>@T("No unallocated students", "لا يوجد طلاب غير مسكنين")</strong>
+                                                <span>@T("Try changing the filters or all matching students are already allocated.", "غيّر عوامل التصفية أو أن جميع الطلاب المطابقين تم تسكينهم.")</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="allocation-action-bar">
+                        <span>
+                            @string.Format(T("{0} students selected", "تم تحديد {0} طالب"), selectedContractIds.Count)
+                            @if (selectedContractIds.Count > 0)
+                            {
+                                <small>@T("Drag any selected row to the classroom", "اسحب أي طالب محدد إلى مربع الفصل")</small>
+                            }
+                        </span>
+                        <button class="btn allocate-button" disabled="@(!CanAllocateSelection)" @onclick="AllocateSelected"><span class="material-symbols-outlined">event_seat</span>@T("Allocate to classroom", "إضافة الى الفصل")</button>
+                    </div>
+                </section>
+
+                <section class="room-panel">
+                    @if (filterClassId == 0)
+                    {
+                        <div class="room-filter-placeholder">
+                            <span class="material-symbols-outlined">meeting_room</span>
+                            <h3>@T("Select a grade", "اختر الصف")</h3>
+                            <p>@T("Choose a grade from the search filters to display its classrooms.", "اختر الصف من خيارات البحث لعرض الفصول التابعة له.")</p>
+                        </div>
+                    }
+                    else if (!FilteredRooms.Any())
+                    {
+                        <div class="room-filter-placeholder">
+                            <span class="material-symbols-outlined">meeting_room</span>
+                            <h3>@T("No classrooms for this grade", "لا توجد فصول لهذا الصف")</h3>
+                            <p>@T("No classrooms are configured for the selected grade.", "لم يتم تعريف فصول دراسية للصف المختار.")</p>
+                        </div>
+                    }
+                    else
+                    {
+                    <div class="room-header">
+                        <div class="room-identity">
+                            <span class="room-icon material-symbols-outlined">meeting_room</span>
+                            <div class="inline-room-selector">
+                                <label for="selected-room">@T("Current classroom", "الفصل")</label>
+                                <select id="selected-room" class="form-control" value="@selectedRoomId" @onchange="RoomChanged">
+                                    @foreach (var room in FilteredRooms)
+                                    {
+                                        <option value="@room.Id">@RoomDisplayName(room)</option>
+                                    }
+                                </select>
+                                @if (SelectedRoom is not null)
+                                {
+                                    <span>@Localized(SelectedRoom.Class.Level.Name, SelectedRoom.Class.Level.NameAr) · @Localized(SelectedRoom.Class.Name, SelectedRoom.Class.NameAr)</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="room-header-actions">
+                            <div class="capacity-meter">
+                                <div>
+                                    <strong>@SelectedRoomOccupancy</strong><span>/ @SelectedRoom?.Capacity</span>
+                                </div>
+                                <div class="capacity-track">
+                                    <i style="width: @SelectedRoomOccupancyPercent%"></i>
+                                </div>
+                            </div>
+                            <button class="btn save-button" disabled="@(isSaving || !HasChanges)" @onclick="SaveAsync">
+                                <span class="material-symbols-outlined">@(isSaving ? "progress_activity" : "save")</span>@T("Save changes", "حفظ التغييرات")
+                            </button>
+                        </div>
+                    </div>
+                    @if (SelectedRoom is not null)
+                    {
+                        <div class="teacher-card">
+                            <span class="teacher-avatar material-symbols-outlined">person</span>
+                            <div>
+                                <small>@T("Classroom teacher", "المعلم/ة المسؤول عن الفصل")</small>
+                                <strong>@(SelectedRoom.ResponsibleTeacher?.Name ?? T("Not assigned", "لم يتم التحديد"))</strong>
+                            </div>
+                            <div>
+                                <span class="teacher-avatar material-symbols-outlined">mail</span>
+                            <strong dir="ltr">@(SelectedRoom.ResponsibleTeacher?.Email ?? "—")</strong>
+                        </div>
+                        <div>
+                                <span class="teacher-avatar material-symbols-outlined">phone</span>
+                            <strong dir="ltr">@(SelectedRoom.ResponsibleTeacher?.PhoneNumber ?? "—")</strong>
+                        </div>
+                    </div>
+                    <div class="classroom-visual @(isDraggingSelection ? (CanAllocateSelection ? "drop-ready" : "drop-unavailable") : null)"
+                         @ondragover:preventDefault="true"
+                         @ondrop="DropSelected">
+                        @if (isDraggingSelection)
+                        {
+                            <div class="classroom-drop-message">
+                                <span class="material-symbols-outlined">move_to_inbox</span>
+                                <strong>@(CanAllocateSelection ? string.Format(T("Drop {0} students here", "أفلت {0} طالب هنا"), selectedContractIds.Count) : T("The selected students cannot be allocated here", "لا يمكن تسكين الطلاب المحددين هنا"))</strong>
+                            </div>
+                        }
+                        <div class="classroom-shell">
+                            <div class="board">
+                                   
+                            </div>
+                            
+
+                            <div class="room-stats">
+                                <div>
+                                    <span class="material-symbols-outlined">event_seat</span>
+                                    <strong>@SelectedRoom.Capacity</strong>
+                                    <small>@T("Seats", "المقاعد")</small>
+                                </div>
+                                <div>
+                                    <span class="material-symbols-outlined">person</span>
+                                    <strong>@SelectedRoomOccupancy</strong>
+                                    <small>@T("Occupied", "المسكن")</small>
+                                </div>
+                                <div>
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                    <strong>@SelectedRoomAvailableSeats</strong>
+                                    <small>@T("Available", "المتاح")</small>
+                                </div>
+                            </div>
+                            <div class="room-seats-grid">
+                                @foreach (var seat in SelectedRoomSeats)
+                                {
+                                    <div class="seat-position">
+                                        @if (seat.Student is not null)
+                                        {
+                                            <button class="class-seat occupied-seat" title="@string.Format(T("Return {0} to waiting list?", "إعادة {0} إلى قائمة الانتظار؟"), seat.Student.StudentName)" @onclick="() => UnallocateStudent(seat.Student)">
+                                                <span class="seat-index">@seat.Number</span>
+                                                <span class="material-symbols-outlined">person</span>
+                                                <strong>@seat.Student.StudentNumber</strong>
+                                                <small>@seat.Student.StudentName</small>
+                                            </button>
+                                        }
+                                        else if (seat.IsOccupied)
+                                        {
+                                            <div class="class-seat occupied-seat reserved-seat text-center">
+                                                <span class="seat-index">@seat.Number</span>
+                                                <span class="material-symbols-outlined">person</span>
+                                                <strong>@T("Occupied", "مشغول")</strong>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="class-seat empty-seat text-center">
+                                                <span class="seat-index">@seat.Number</span>
+                                                <span class="material-symbols-outlined">event_seat</span>
+                                                <strong>@T("Available", "متاح")</strong>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seat-legend">
+                        <span><i class="occupied-key"></i>@T("Allocated", "مقعد مسكن")</span>
+                        <span><i class="available-key"></i>@T("Available", "مقعد متاح")</span>
+                        <span>@T("Click an occupied seat to remove its student", "انقر على المقعد المسكن لإعادة الطالب لقائمة الانتظار")</span>
+                    </div>
+                    }
+                    }
+                </section>
+        </div>
+    }
+</div>
+</div>

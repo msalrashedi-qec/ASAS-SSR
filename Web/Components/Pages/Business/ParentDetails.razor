@@ -1,0 +1,100 @@
+﻿@page "/parent-details"
+@page "/parent-details/{id}"
+
+@attribute [Authorize]
+
+
+ 
+
+<PageTitle>@_localizer["ParentDetails"]</PageTitle>
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>@_localizer["ParentDetails"]</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["ParentDetails"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <EditForm Model="@_model" OnValidSubmit="SaveDataAsync" >
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="row">
+            <div class="col-md-3 p-2">
+    @_localizer["Title"]
+                <RadzenDropDown @bind-Value=@_model.GenderId Data=@genders TextProperty="@_localizer["FieldName"]" ValueProperty="Id" class="form-control" />
+</div>
+            <div class="col-md-3 p-2">
+                @_localizer["Name"]
+                <InputText @bind-Value="_model.Name" id="Name" class="form-control" required MaxLenght="100" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["Nationality"]
+                <RadzenDropDown @bind-Value=@_model.NationalityId Data=@nationalities TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" class="form-control" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["Mobile"]
+                <InputText @bind-Value="_model.Mobile" id="Mobile" class="form-control text-center" required MaxLenght="10" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["NationalID"]
+                <InputText @bind-Value="_model.NationalID" id="NationalID" class="form-control text-center" required MaxLenght="10" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["IssuedFrom"]
+                <InputText @bind-Value="_model.NationalIDIssuedFrom" id="IssuedFrom" class="form-control" required MaxLenght="50" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["ExpiryDate"]
+                <RadzenDatePicker @bind-Value=@_model.NationalIDExpiryDate DateFormat="dd/MM/yyyy" ShowCalendarWeek AllowClear="true" Style="width:100%" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["Occupation"]
+                <InputText @bind-Value="_model.Occupation" id="Occupation" class="form-control" required MaxLenght="50" />
+            </div>
+            
+            <div class="col-md-3 p-2">
+                @_localizer["HomeAddress"]
+                <InputText @bind-Value="_model.HomeAddress" id="HomeAddress" class="form-control" required MaxLenght="50" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["HomePhone"]
+                <InputText @bind-Value="_model.HomePhone" id="HomePhone" class="form-control" MaxLenght="10" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["WorkAddress"]
+                <InputText @bind-Value="_model.WorkAddress" id="WorkAddress" class="form-control" MaxLenght="50" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["WorkPhone"]
+                <InputText @bind-Value="_model.WorkPhone" id="WorkPhone" class="form-control" MaxLenght="10" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["Email"]
+                <InputText @bind-Value="_model.Email" id="Email" class="form-control" MaxLenght="50" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["PO"]
+                <InputText @bind-Value="_model.PO" id="PO" class="form-control" MaxLenght="50" />
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["PoCode"]
+                <InputText @bind-Value="_model.PoCode" id="PoCode" class="form-control" MaxLenght="10" />
+            </div>
+            <div class="col-12 p-2">
+                @_localizer["Comments"]
+                <InputTextArea @bind-Value="_model.Comments" id="Comments" class="form-control bg-light-warning" MaxLenght="1000" />
+            </div>
+        </div>
+        <div class="text-center py-3">
+            <button type="submit" class="submit-btn">@_localizer["Save"]</button>
+        </div>
+    </EditForm>
+</div>

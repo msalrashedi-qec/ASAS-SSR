@@ -1,0 +1,114 @@
+@page "/bus-drivers"
+@attribute [Authorize]
+
+<div class="modal fade" id="DriverDetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">@T("Driver details", "بيانات السائق")</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="model" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger" /><div class="row">
+                    <div class="col-md-6 p-2">
+                        <label class="form-label">@T("Driver name", "اسم السائق")</label>
+                        <InputText class="form-control" @bind-Value="model.Name" />
+                    </div>
+                    <div class="col-md-6 p-2">
+                        <label class="form-label">@T("National ID", "رقم الهوية")</label>
+                        <InputText class="form-control" @bind-Value="model.NationalID" />
+                    </div>
+                    <div class="col-md-6 p-2">
+                        <label class="form-label">@T("Mobile", "رقم الجوال")</label>
+                        <InputText class="form-control" @bind-Value="model.Mobile" />
+                    </div>
+                    <div class="col-md-6 p-2">
+                        <label class="form-label">@T("Nationality", "الجنسية")</label>
+                        <InputSelect class="form-control" @bind-Value="model.NationalityId">
+                            <option value="0">@T("Select nationality", "اختر الجنسية")</option>
+                            @foreach (var nationality in nationalities)
+                            {
+                                <option value="@nationality.Id">@Localized(nationality.Name, nationality.NameAr)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" disabled="@isProcessing" class="btn btn-primary">@T("Save", "حفظ")</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+</div>
+
+<header>
+    <h2>@T("Bus drivers", "إدارة سائقي الحافلات")</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@T("Control panel", "لوحة التحكم")" />
+            <RadzenBreadCrumbItem Text="@T("Bus drivers", "سائقو الحافلات")" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <div class="p-4">
+        <button class="btn btn-outline-primary" @onclick="New" data-bs-toggle="modal" data-bs-target="#DriverDetailsModal">
+            <span class="material-symbols-outlined align-middle">person_add</span>
+            @T("New driver", "سائق جديد")
+        </button>
+        @if (isLoading)
+        {
+            <LoadingBar />
+        }
+        else if (drivers.Count == 0)
+        {
+            <div class="alert alert-info mt-4">@T("No drivers have been added.", "لم تتم إضافة سائقين بعد.")</div>
+        }
+        else
+        {
+            <div class="table-responsive mt-4">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@T("Driver", "السائق")</th>
+                            <th>@T("National ID", "رقم الهوية")</th>
+                            <th>@T("Mobile", "الجوال")</th>
+                            <th>@T("Nationality", "الجنسية")</th>
+                            <th>@T("Action", "الإجراء")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < drivers.Count; i++)
+                        {
+                            var driver = drivers[i];
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <strong>@driver.Name</strong>
+                                </td>
+                                <td>@driver.NationalID</td>
+                                <td dir="ltr">@driver.Mobile</td>
+                                <td>@Localized(driver.Nationality.Name, driver.Nationality.NameAr)</td>
+                                <td>
+                                    <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(driver)" data-bs-toggle="modal" data-bs-target="#DriverDetailsModal">edit</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

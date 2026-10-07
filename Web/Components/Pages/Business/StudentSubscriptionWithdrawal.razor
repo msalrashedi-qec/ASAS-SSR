@@ -1,0 +1,126 @@
+@page "/student-subscription-withdrawal/{StudentId:guid}"
+@attribute [Authorize(Policy = Policies.Subscriptions.Remove)]
+
+<PageTitle>@_localizer["SubscriptionWithdrawal"]</PageTitle>
+
+@if (isLoading || isSaving)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>@_localizer["SubscriptionWithdrawal"]</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["SubscriptionWithdrawal"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+<div class="content-body withdrawal-page">
+    @if (!isLoading && student is null)
+    {
+        <div class="withdrawal-empty">
+            <span class="material-symbols-outlined">person_search</span>
+            <p>@_localizer["NotFound"]</p>
+        </div>
+    }
+    else if (student is not null && contract is not null)
+    {
+        <section class="withdrawal-student-summary">
+            <div class="withdrawal-avatar"><span class="material-symbols-outlined">school</span></div>
+            <div>
+                <h3>@StudentFullName</h3>
+                <div class="withdrawal-meta">
+                    <span><strong>@StudentCode</strong></span>
+                    <span>@Localized(contract.Class.Name, contract.Class.NameAr)</span>
+                    <span>@contract.Year.Name</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="withdrawal-card">
+            <div class="withdrawal-card-heading">
+                <div>
+                    <span class="material-symbols-outlined">playlist_remove</span>
+                    <div>
+                        <h3>@_localizer["ActiveSubscriptions"]</h3>
+                        <p>@_localizer["SubscriptionWithdrawalHelp"]</p>
+                    </div>
+                </div>
+                <span class="withdrawal-count">@subscriptions.Count</span>
+            </div>
+
+            @if (subscriptions.Count == 0)
+            {
+                <div class="withdrawal-empty compact">
+                    <span class="material-symbols-outlined">inbox</span>
+                    <p>@_localizer["NoActiveSubscriptions"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table withdrawal-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>@_localizer["Service"]</th>
+                                <th>@_localizer["Semester"]</th>
+                                <th>@_localizer["Price"]</th>
+                                <th>@_localizer["SubscriptionDate"]</th>
+                                <th>@_localizer["WithdrawalDate"]</th>
+                                <th>@_localizer["WithdrawalPenalty"]</th>
+                                <th>@_localizer["Action"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in subscriptions.Select((value, index) => (value, index)))
+                            {
+                                <tr>
+                                    <td>@(item.index + 1)</td>
+                                    <td class="service-name">@Localized(item.value.ServiceName, item.value.ServiceNameAr)</td>
+                                    <td>@Localized(item.value.SemesterName, item.value.SemesterNameAr)</td>
+                                    <td class="money" dir="ltr">@ReportFormatter.Amount(item.value.FeeAmount)</td>
+                                    <td dir="ltr">@item.value.SubscriptionDate.ToString("dd-MM-yyyy")</td>
+                                    <td class="date-cell">
+                                        <RadzenDatePicker @bind-Value="item.value.WithdrawalDate"
+                                                          Change="@(_ => PreviewPenaltyAsync(item.value))"
+                                                          DateFormat="dd/MM/yyyy"
+                                                          Min="item.value.SubscriptionDate"
+                                                          Max="contract.EndDate"
+                                                          AllowClear="true"
+                                                          Placeholder="dd/mm/yyyy"
+                                                          Style="width:100%" />
+                                    </td>
+                                    <td class="money penalty-cell" dir="ltr">
+                                        @ReportFormatter.Amount(item.value.PenaltyAmount)
+                                        @if (!string.IsNullOrWhiteSpace(item.value.PenaltyName))
+                                        {
+                                            <small>@item.value.PenaltyName</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <button type="button" class="withdraw-btn" disabled="@(isSaving || !item.value.WithdrawalDate.HasValue)" @onclick="() => WithdrawAsync(item.value)">
+                                            <span class="material-symbols-outlined">playlist_remove</span>
+                                            @_localizer["Withdraw"]
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+    else if (!isLoading)
+    {
+        <div class="withdrawal-empty">
+            <span class="material-symbols-outlined">contract_delete</span>
+            <p>@_localizer["StudentContractNotFound"]</p>
+        </div>
+    }
+</div>

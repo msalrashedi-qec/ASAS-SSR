@@ -1,0 +1,205 @@
+﻿@page "/wf-process-age"
+@attribute [Authorize]
+
+@if (isLoading)
+    {
+        <LoadingBar />
+    }
+    <header>
+        <h4>
+                @_localizer["WfAging"]
+            </h4>
+    </header>
+    <div class="p-2">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["WfAging"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+    </div>
+    <div class="content-body">
+        <div class="card m-2">
+            <div class="card-header">
+                @_localizer["Search"]
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    
+                    <div class="col-md-3 p-2">
+                        <InputText @bind-Value=filter.RefNo placeholder="@_localizer["ProcessId"]" class="form-control text-center"></InputText>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        <RadzenDropDown @bind-Value=selectedTypes Data=@types TextProperty="Name" ValueProperty="Id"
+                                        Multiple=true Placeholder="@_localizer["Type"]" Chips=true class="form-control" />
+                    </div>
+                   
+                    <div class="col-md-3 p-2">
+                        <button class="btn btn-primary w-100" @onclick=GetListAsync>
+                            @_localizer["Search"]
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @if (!isLoading)
+        {
+            <div class="p-3">
+                <div class="overflow-auto">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>@_localizer["Type"]</th>
+                                <th>@_localizer["0To7Days"]</th>
+                                <th>@_localizer["8To30Days"]</th>
+                                <th>@_localizer["31To60Days"]</th>
+                                <th>@_localizer["Over60Days"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int index = 1;
+                                if (workflows != null)
+                                {
+                                    foreach (var item in workflows)
+                                    {
+                                        <tr class="@item.RowStyle">
+                                            <td>@index</td>
+                                            <td>
+                                            @item.TypeName
+                                            </td>
+                                            <td>
+                                                @if(item.From0To7 > 0)
+                                                {
+                                                    <button type="button" class="btn c-green" @onclick="(()=> wfTasks = item.From0To7Tasks)">
+                                                        @item.From0To7
+                                                    </button>
+                                                }
+                                                else
+                                                    @item.From0To7
+                                            </td>
+                                            <td>
+                                                @if (item.From8To30 > 0)
+                                                {
+                                                    <button type="button" class="btn c-blue" @onclick="(()=> wfTasks = item.From8To30Tasks)" data-bs-toggle="modal" data-bs-target="#TasksModal">
+                                                        @item.From8To30
+                                                    </button>
+                                                }
+                                                else
+                                                    @item.From8To30
+                                            </td>
+                                            <td>
+                                                @if (item.From31To60 > 0)
+                                                {
+                                                    <button type="button" class="btn c-orange" @onclick=@(()=> wfTasks = item.From31To60Tasks) data-bs-toggle="modal" data-bs-target="#TasksModal">
+                                                        @item.From31To60
+                                                    </button>
+                                                }
+                                                else
+                                                    @item.From31To60
+                                            </td>
+                                            <td>
+                                                @if (item.Over60 > 0)
+                                                {
+                                                    <button type="button" class="btn c-red" @onclick=@(()=> wfTasks = item.Over60Tasks) data-bs-toggle="modal" data-bs-target="#TasksModal">
+                                                        @item.Over60
+                                                    </button>
+                                                }
+                                                else
+                                                    @item.Over60
+                                            </td>
+                                        </tr>
+                                        index++;
+                                    }
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (wfTasks != null)
+            {
+                <div class="modal fade" id="TrackProcessModal" tabindex="-1" aria-labelledby="TrackProcessModalLabel" aria-hidden="true" data-bs-focus="false">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2 class="modal-title" id="TrackProcessModalLabel"> @_localizer["Details"]</h2>
+                                <div style="text-align: left">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                                <TrackRequest ProcessId="@processId"></TrackRequest>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        @_localizer["Details"]
+                    </div>
+                    <div class="card-body">
+                        <div class="overflow-auto">
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th><input type="button" class="btn font-weight-bold" @onclick="()=> SortData(1)" @onclick:stopPropagation value="@_localizer["ProcessId"]" /></th>
+                                        <th>@_localizer["Type"]</th>
+                                        <th><input type="button" class="btn font-weight-bold" @onclick="()=> SortData(3)" @onclick:stopPropagation value="@_localizer["RequestedFor"]" /></th>
+                                        <th>@_localizer["Responsible"]</th>
+                                        <th><input type="button" class="btn font-weight-bold" @onclick="()=> SortData(5)" @onclick:stopPropagation value="@_localizer["CurrentTask"]" /></th>
+                                        <th><input type="button" class="btn font-weight-bold" @onclick="()=> SortData(6)" @onclick:stopPropagation value="@_localizer["ReceivedOn"]" /></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int rowIndex = 1;
+                                        if (wfTasks != null)
+                                        {
+                                            foreach (var item in wfTasks)
+                                            {
+                                                <tr>
+                                                    <td>@rowIndex</td>
+                                                    <td>
+                                                        <a href="process-details/@item.WfProcessId">
+                                                            @item.RefNo
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                    <button class="btn c-blue" @onclick="() => processId = item.WfProcessId" data-bs-toggle="modal" data-bs-target="#TrackProcessModal"> @item.TypeName</button>
+                                                    </td>
+                                                    <td>
+                                                    @item.RequesterName
+                                                    </td>
+                                                    <td>
+                                                        @foreach (var responsible in item.Responsibles)
+                                                        {
+                                                            <div class="p-1">
+                                                            @responsible.Name
+                                                            </div>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                    @item.TaskName
+                                                    </td>
+                                                    <td>
+                                                        @item.StartDate.ToString("dd/MM/yyyy hh:mm tt")
+                                                    </td>
+                                                </tr>
+                                                rowIndex++;
+                                            }
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>

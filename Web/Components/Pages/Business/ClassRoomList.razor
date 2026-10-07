@@ -1,0 +1,216 @@
+@page "/classrooms"
+@attribute [Authorize]
+
+<div class="modal fade" id="ClassRoomDetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" data-bs-focus="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">@T("Classroom details", "بيانات الفصل الدراسي")</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <EditForm Model="model" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">@T("Level", "المرحلة")</label>
+                            <select class="form-control" value="@model.LevelId" @onchange="ModelLevelChanged" required>
+                                <option value="0">@T("Select level", "اختر المرحلة")</option>
+                                @foreach (var level in levels)
+                                {
+                                    <option value="@level.Id">@Localized(level.Name, level.NameAr)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@T("Grade", "الصف")</label>
+                            <select class="form-control" @bind="model.ClassId" disabled="@(model.LevelId == 0)" required>
+                                <option value="0">@T("Select grade", "اختر الصف")</option>
+                                @foreach (var schoolClass in ModelClasses)
+                                {
+                                    <option value="@schoolClass.Id">@Localized(schoolClass.Name, schoolClass.NameAr)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@T("English name", "اسم الفصل بالإنجليزية")</label>
+                            <InputText class="form-control" @bind-Value="model.Name" maxlength="100" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">@T("Arabic name", "اسم الفصل بالعربية")</label>
+                            <InputText class="form-control" @bind-Value="model.NameAr" maxlength="100" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@T("Gender", "الجنس")</label>
+                            <select class="form-control" @bind="model.GenderId" required>
+                                <option value="0">@T("Select gender", "اختر الجنس")</option>
+                                @foreach (var gender in genders)
+                                {
+                                    <option value="@gender.Id">@Localized(gender.Name, gender.NameAr)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@T("Capacity", "سعة الفصل")</label>
+                            <InputNumber class="form-control" @bind-Value="model.Capacity" min="1" max="100" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">@T("Responsible teacher", "المعلم/ة المسؤول")</label>
+                            <select class="form-control" @bind="model.ResponsibleTeacherId">
+                                <option value="">@T("Not assigned", "غير محددة")</option>
+                                @foreach (var teacher in teachers)
+                                {
+                                    <option value="@teacher.Id">@teacher.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@T("Cancel", "إلغاء")</button>
+                    <button type="submit" class="btn btn-primary" disabled="@isProcessing">@T("Save", "حفظ")</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ClassRoomDeleteModal" tabindex="-1" data-bs-backdrop="static" data-bs-focus="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">@T("Delete classroom", "حذف الفصل")</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>@T("Are you sure you want to delete this classroom?", "هل أنت متأكد من حذف هذا الفصل؟")</p>
+                <strong>@Localized(model.Name, model.NameAr)</strong>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">@T("Cancel", "إلغاء")</button>
+                <button class="btn btn-danger" disabled="@isProcessing" @onclick="DeleteAsync">@T("Delete", "حذف")</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<header>
+    <h2>@T("Classroom management", "إدارة الفصول الدراسية")</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@T("Control panel", "لوحة التحكم")" />
+            <RadzenBreadCrumbItem Text="@T("Classrooms", "الفصول الدراسية")" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body classroom-list-page">
+    <div class="p-4">
+        <div class="list-toolbar">
+            <div>
+                <h3>@T("School classrooms", "فصول المدرسة الدراسية")</h3>
+                <p>@T("Define classrooms for every grade and assign the responsible teacher.", "عرّف الفصول لكل صف وحدد المسؤول عنها.")</p>
+            </div>
+            <button class="btn add-room-button" @onclick="New" data-bs-toggle="modal" data-bs-target="#ClassRoomDetailsModal">
+                <span class="material-symbols-outlined">add</span>@T("New classroom", "فصل جديد")
+            </button>
+        </div>
+        <div class="filters-card">
+            <label>
+                <span>@T("Level", "المرحلة")</span>
+                <select class="form-control" value="@filterLevelId" @onchange="ListLevelChanged">
+                    <option value="0">@T("All levels", "كل المراحل")</option>
+                    @foreach (var level in levels)
+                    {
+                        <option value="@level.Id">@Localized(level.Name, level.NameAr)</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>@T("Grade", "الصف")</span>
+                <select class="form-control" @bind="filterClassId" disabled="@(filterLevelId == 0)">
+                    <option value="0">@T("All grades", "كل الصفوف")</option>
+                    @foreach (var schoolClass in FilterClasses)
+                    {
+                        <option value="@schoolClass.Id">@Localized(schoolClass.Name, schoolClass.NameAr)</option>
+                    }
+                </select>
+            </label>
+        </div>
+        @if (isLoading)
+        {
+            <LoadingBar />
+        }
+        else if (!FilteredRooms.Any())
+        {
+            <div class="rooms-empty">
+                <span class="material-symbols-outlined">meeting_room</span>
+                <strong>@T("No classrooms found", "لا توجد شعب دراسية")</strong>
+                <span>@T("Add a classroom or change the filters.", "أضف فصل جديد أو غيّر عوامل التصفية.")</span>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive rooms-table-wrap">
+                <table class="table rooms-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@T("Classroom", "الفصل")</th>
+                            <th>@T("Level / grade", "المرحلة والصف")</th>
+                            <th>@T("Gender", "الجنس")</th>
+                            <th>@T("Capacity", "السعة")</th>
+                            <th>@T("Responsible teacher", "مدير الفصل")</th>
+                            <th>@T("Actions", "الإجراءات")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var index = 1;
+                        }
+                        @foreach (var room in FilteredRooms)
+                        {
+                            <tr>
+                                <td>
+                                    @index
+                                </td>
+                                <td>
+                                    <span class="room-name-icon material-symbols-outlined">meeting_room</span><strong>@Localized(room.Name, room.NameAr)</strong>
+                                </td>
+                                <td>
+                                    <strong>@Localized(room.Class.Level.Name, room.Class.Level.NameAr)</strong><small>@Localized(room.Class.Name, room.Class.NameAr)</small>
+                                </td>
+                                <td>
+                                    <span class="gender-pill">@Localized(room.Gender.Name, room.Gender.NameAr)</span>
+                                </td>
+                                <td>
+                                    <strong>@room.Capacity</strong> @T("seats", "مقعد")
+                                </td>
+                                <td>
+                                    @if (room.ResponsibleTeacher is null)
+                                    {
+                                        <span class="not-assigned">@T("Not assigned", "غير محددة")</span>
+                                    }
+                                    else
+                                    {
+                                        <strong>@room.ResponsibleTeacher.Name</strong><small dir="ltr">@room.ResponsibleTeacher.Email</small>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="icon-button edit" title="@T("Edit", "تعديل")" @onclick="() => Edit(room)" data-bs-toggle="modal" data-bs-target="#ClassRoomDetailsModal">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </button>
+                                    <button class="icon-button delete" title="@T("Delete", "حذف")" @onclick="() => ConfirmDelete(room)" data-bs-toggle="modal" data-bs-target="#ClassRoomDeleteModal">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

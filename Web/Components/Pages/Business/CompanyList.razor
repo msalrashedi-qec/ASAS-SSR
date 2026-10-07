@@ -1,0 +1,146 @@
+﻿@page "/companies"
+@attribute [Authorize]
+
+
+<div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="_model" OnValidSubmit="SaveDataAsync" >
+                <DataAnnotationsValidator />
+                <div class="modal-body">
+                    <ValidationSummary class="bd-callout bd-callout-danger"></ValidationSummary>
+                    <div class="row">
+                        <div class="col-md-6 p-2">
+                            @_localizer["Name"]:
+                            <InputText class="form-control" @bind-Value="_model.Name" maxlength="100" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["NameAr"]:
+                            <InputText class="form-control" @bind-Value="_model.NameAr" maxlength="100" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["CR"]:
+                            <InputText class="form-control" @bind-Value="_model.CR" maxlength="50" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["PhoneNumber"]:
+                            <InputText class="form-control" @bind-Value="_model.PhoneNumber" maxlength="20" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["FaxNumber"]:
+                            <InputText class="form-control" @bind-Value="_model.FaxNumber" maxlength="20" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["Email"]:
+                            <InputText class="form-control" type="email" @bind-Value="_model.Email" maxlength="100" />
+                        </div>
+                        <div class="col-md-12 p-2">
+                            @_localizer["Address"]:
+                            <InputText class="form-control" @bind-Value="_model.Address" maxlength="200" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["PO"]:
+                            <InputText class="form-control" @bind-Value="_model.PO" maxlength="50" />
+                        </div>
+                        <div class="col-md-6 p-2">
+                            @_localizer["PoCode"]:
+                            <InputText class="form-control" @bind-Value="_model.PoCode" maxlength="20" />
+                        </div>
+                        <div class="col-md-12 p-2">
+                            @_localizer["Logo"]:
+                            <InputFile class="form-control" accept="image/*" OnChange="OnLogoSelected" />
+                        </div>
+                        <div class="col-md-12 p-2">
+                            @_localizer["ReceiptFooter"]:
+                            <InputFile class="form-control" accept="image/*" OnChange="OnReceiptFooterSelected" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer center">
+                    <button type="submit" disabled="@isProcessing" class="btn btn-primary">
+                        @_localizer["Save"]
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <h2>
+            @_localizer["Companies"]
+        </h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["Companies"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+<div class="content-body">
+    <div class="p-4">
+        <button type="button" class="btn btn-outline-primary" @onclick="() => New()" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+            @_localizer["New"]
+        </button>
+        <div class="overflow-auto mt-4">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>@_localizer["Logo"]</th>
+                        <th>@_localizer["Name"]</th>
+                        <th>@_localizer["NameAr"]</th>
+                        <th>@_localizer["CR"]</th>
+                        <th>@_localizer["PhoneNumber"]</th>
+                        <th>@_localizer["Email"]</th>
+                        <th>@_localizer["Action"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in companies)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Logo))
+                                {
+                                    <img src="@Assets[$"uploads/companies/{item.Logo}"]" style="max-width: 80px; max-height: 80px;" />
+                                }
+                                else
+                                {
+                                    <span class="material-symbols-outlined">X</span>
+                                }
+                            </td>
+                            <td>@item.Name</td>
+                            <td>@item.NameAr</td>
+                            <td>@item.CR</td>
+                            <td>@item.PhoneNumber</td>
+                            <td>@item.Email</td>
+                            <td>
+                                <span class="material-symbols-outlined icon c-blue pointer" @onclick="() => Edit(item)" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                                    edit
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>

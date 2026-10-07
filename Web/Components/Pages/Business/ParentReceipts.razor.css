@@ -1,0 +1,34 @@
+.receipts-page { padding: 24px; }
+.receipts-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:20px; padding:22px 25px; border-radius:16px; background:linear-gradient(135deg,#eef8fb,#fff); border:1px solid #d8e8ed; }
+.receipts-heading > div { display:flex; align-items:center; gap:14px; }
+.receipts-heading > div > .material-symbols-outlined { display:grid; place-items:center; width:50px; height:50px; color:#187693; background:#d8f0f7; border-radius:14px; font-size:28px; }
+.receipts-heading small,.receipts-heading p { color:#758a91; }
+.receipts-heading h3,.receipts-heading p { margin:0; }
+.receipts-heading h3 { margin-block:2px; font-size:20px; }
+.receipts-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+.receipts-summary > div { display:flex; flex-direction:column; gap:7px; padding:18px 20px; border:1px solid #e1eaed; border-radius:13px; background:#fff; box-shadow:0 5px 18px rgba(31,78,92,.05); }
+.receipts-summary span { color:#73868d; font-size:12px; }
+.receipts-summary strong { color:#173f4c; font-size:19px; }
+.receipts-card { overflow:hidden; border:1px solid #dee8eb; border-radius:16px; background:#fff; box-shadow:0 8px 28px rgba(31,78,92,.06); }
+.receipts-toolbar { padding:16px 18px; border-bottom:1px solid #e8eef0; }
+.receipt-search { position:relative; max-width:390px; }
+.receipt-search .material-symbols-outlined { position:absolute; top:10px; inset-inline-start:12px; color:#7e9299; }
+.receipt-search input { padding-inline-start:43px; }
+.receipts-table { margin:0; }
+.receipts-table th { padding:13px 16px; color:#667c84; background:#f6f9fa; font-size:12px; white-space:nowrap; }
+.receipts-table td { padding:15px 16px; vertical-align:middle; color:#34515b; }
+.receipts-table td:nth-child(3) { display:flex; flex-direction:column; gap:3px; }
+.receipts-table td:nth-child(3) small { color:#8a9ca2; }
+.receipt-sn { color:#16708c; font-family:ui-monospace,Consolas,monospace; }
+.payment-method { display:inline-block; padding:5px 10px; color:#506a73; background:#eef4f5; border-radius:20px; font-size:12px; }
+.actions-column { width:120px; }
+.receipt-actions { display:flex; gap:8px; }
+.action-button { display:grid; place-items:center; width:36px; height:36px; border-radius:9px; text-decoration:none; }
+.action-button .material-symbols-outlined { font-size:20px; }
+.action-button.edit { color:#a56b00; background:#fff4d8; }
+.action-button.print { color:#116f8d; background:#e4f4f8; }
+.receipts-empty { display:flex; flex-direction:column; align-items:center; padding:55px 20px; color:#81949b; text-align:center; }
+.receipts-empty .material-symbols-outlined { margin-bottom:10px; font-size:48px; }
+.receipts-empty strong { color:#405b64; }
+.receipts-empty p { margin:5px 0 0; }
+@media (max-width:700px) { .receipts-page{padding:12px}.receipts-heading{align-items:flex-start;flex-direction:column}.receipts-summary{grid-template-columns:1fr}.receipts-heading .submit-btn{width:100%;justify-content:center} }

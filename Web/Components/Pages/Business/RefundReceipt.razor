@@ -1,0 +1,228 @@
+@page "/refund-receipt/{ParentId:guid}"
+@page "/refund-receipt/{ParentId:guid}/{RefundReceiptId:guid}"
+@attribute [Authorize(Policy = Policies.RefundReceipts.Create)]
+
+<PageTitle>سند صرف</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header class="print-display-none">
+    <h2>سند صرف</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="سند صرف" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+@if (!isLoading && parent is null)
+{
+    <div class="content-body p-4 text-center bg-light-warning">لم يتم العثور على ولي الأمر.</div>
+}
+else if (savedReceipt is not null)
+{
+    <div class="refund-actions print-display-none">
+        @if (savedRefundId.HasValue)
+        {
+            <AuthorizeView Policy="@Policies.RefundReceipts.Edit">
+                <Authorized>
+                    <a class="btn btn-outline-primary" href="refund-receipt-edit/@ParentId/@savedRefundId"><span class="material-symbols-outlined">edit</span> تعديل سند الصرف</a>
+                </Authorized>
+            </AuthorizeView>
+        }
+        <button type="button" class="btn btn-outline-secondary" @onclick="PrintAsync">
+            <span class="material-symbols-outlined">print</span> @_localizer["Print"]
+        </button>
+        @if (!RefundReceiptId.HasValue)
+        {
+            <button type="button" class="btn btn-outline-primary" @onclick="StartAnotherRefundAsync">
+                <span class="material-symbols-outlined">currency_exchange</span> سند صرف جديد
+            </button>
+        }
+        <a class="btn btn-light" href="index">العودة للرئيسية</a>
+    </div>
+
+    <article id="payment-receipt" class="refund-voucher">
+        <div class="voucher-letterhead">
+            <div class="voucher-logo">
+                @if (!string.IsNullOrWhiteSpace(school?.Logo))
+                {
+                    <img src="@Assets[$"uploads/schools/{school.Logo}"]" alt="@SchoolName" />
+                }
+            </div>
+            <div class="voucher-heading">
+                <strong dir="ltr">@savedReceipt.Number.ToString("D6")</strong>
+                <h1>سند صرف</h1>
+                <em>REFUND VOUCHER</em>
+            </div>
+            <div class="voucher-logo">
+                @if (!string.IsNullOrWhiteSpace(school?.Company?.Logo))
+                {
+                    <img src="@Assets[$"uploads/companies/{school.Company.Logo}"]" alt="@CompanyName" />
+                }
+            </div>
+        </div>
+
+        <div class="voucher-date"><span>التاريخ</span><strong dir="ltr">@ReportFormatter.Date(savedReceipt.Date)</strong></div>
+
+        <section class="voucher-total">
+            <span>إجمالي المبلغ</span>
+            <strong dir="ltr">@ReportFormatter.Amount(savedReceipt.Total)</strong>
+            <img src="@Assets["images/icons/Saudi_Riyal_Symbol.svg"]" alt="ريال سعودي" />
+        </section>
+
+        <section class="voucher-statement">
+            <p><span>صرفنا لـ @(_localizer["SelectedLanguage"] == "ar" ? parent!.Gender.TitleAr : parent!.Gender.Title):</span><strong>@parent!.Name</strong></p>
+            <p><span>مبلغاً وقدره:</span><strong>@RefundAmountInWords</strong></p>
+            <p><span>وذلك من الرصيد الدائن في حساب الطالب:</span><strong>@savedReceipt.StudentName</strong></p>
+        </section>
+
+        <section class="voucher-method">
+            <div><span>طريقة الصرف</span><strong>@savedReceipt.PaymentMethod</strong></div>
+            @if (savedReceipt.IsCheque)
+            {
+                <div><span>رقم الشيك</span><strong dir="ltr">@savedReceipt.ChequeNo</strong></div>
+                <div><span>البنك</span><strong>@savedReceipt.BankName</strong></div>
+                <div><span>تاريخ الشيك</span><strong dir="ltr">@ReportFormatter.Date(savedReceipt.ChequeDate!.Value)</strong></div>
+            }
+        </section>
+
+        <table class="voucher-details">
+            <thead><tr><th>الفصل</th><th>الخدمة</th><th>التصنيف</th><th>المبلغ المسترد</th></tr></thead>
+            <tbody>
+                @foreach (var item in savedReceipt.Items)
+                {
+                    <tr><td>@item.Semester</td><td>@item.Service</td><td>@item.Category</td><td dir="ltr">@ReportFormatter.Amount(item.Amount)</td></tr>
+                }
+            </tbody>
+        </table>
+
+        <section class="voucher-signatures">
+            <div><span>المستلم</span><strong>........................</strong></div>
+            <div><span>أمين الصندوق</span><strong>........................</strong></div>
+            <div><span>المحاسب</span><strong>........................</strong></div>
+            <div><span>المدير المالي</span><strong>........................</strong></div>
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(ReceiptFooterImage))
+        {
+            <img class="voucher-footer-image" src="@Assets[$"uploads/companies/{ReceiptFooterImage}"]" alt="بيانات المدرسة" />
+        }
+    </article>
+}
+else if (parent is not null)
+{
+    <div class="content-body refund-page print-display-none">
+        <section class="refund-section">
+            <div class="refund-section-title">
+                <span class="material-symbols-outlined">family_restroom</span>
+                <div><h3>طلاب ولي الأمر</h3><p>@parent.Name — اختر الطالب المراد إعادة الرصيد إليه</p></div>
+            </div>
+
+            @if (students.Count == 0)
+            {
+                <div class="refund-empty">لا يوجد طلاب تابعون لولي الأمر في المدرسة الحالية.</div>
+            }
+            else
+            {
+                <div class="refund-student-cards">
+                    @foreach (var item in students)
+                    {
+                        <button type="button" class="refund-student-card @(selectedStudentId == item.Id ? "selected" : null)" @onclick="() => SelectStudentAsync(item.Id)">
+                            <span class="student-avatar">@Initials(item.Name)</span>
+                            <span class="student-info"><strong>@item.Name</strong><small dir="ltr">@item.Code</small></span>
+                            <span class="student-credit"><small>قابل للاسترداد</small><strong dir="ltr">@ReportFormatter.Amount(item.Refundable)</strong></span>
+                            <span class="material-symbols-outlined card-check">check_circle</span>
+                        </button>
+                    }
+                </div>
+            }
+        </section>
+
+        @if (selectedStudent is not null)
+        {
+            <section class="refund-section">
+                <div class="refund-section-title">
+                    <span class="material-symbols-outlined">payments</span>
+                    <div><h3>بيانات الصرف</h3><p>حدد التاريخ وطريقة إعادة المبلغ</p></div>
+                </div>
+                <div class="row refund-form-grid">
+                    <div class="col-md-6">
+                        <label>الطالب</label>
+                        <div class="student-readonly"><strong>@selectedStudent.Name</strong><span dir="ltr">@selectedStudent.Code</span></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label>تاريخ السند <span>*</span></label>
+                        <RadzenDatePicker @bind-Value="receiptDate" DateFormat="dd/MM/yyyy" Style="width:100%" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>طريقة الصرف <span>*</span></label>
+                        <RadzenDropDown TValue="byte" @bind-Value="paymentMethodId" Data="paymentMethods" TextProperty="DisplayName" ValueProperty="Id"
+                                        Change="PaymentMethodChanged" Placeholder="اختر طريقة الصرف" Style="width:100%" />
+                    </div>
+                    @if (IsCheque)
+                    {
+                        <div class="col-md-4 cheque-field"><label>اسم البنك <span>*</span></label><RadzenDropDown TValue="string" @bind-Value="bankName" Data="banks" TextProperty="DisplayName" ValueProperty="DisplayName" AllowFiltering="true" Placeholder="اختر البنك" Style="width:100%" /></div>
+                        <div class="col-md-4 cheque-field"><label>رقم الشيك <span>*</span></label><InputText class="form-control" @bind-Value="chequeNo" maxlength="50" /></div>
+                        <div class="col-md-4 cheque-field"><label>تاريخ الشيك <span>*</span></label><RadzenDatePicker @bind-Value="chequeDate" DateFormat="dd/MM/yyyy" Style="width:100%" /></div>
+                    }
+                </div>
+            </section>
+
+            <section class="refund-section">
+                <div class="refund-section-title">
+                    <span class="material-symbols-outlined">currency_exchange</span>
+                    <div><h3>المبالغ القابلة للاسترداد</h3><p>أدخل المبلغ المراد إعادته أمام كل خدمة</p></div>
+                </div>
+
+                @if (creditItems.Count == 0)
+                {
+                    <div class="refund-empty success">لا يوجد رصيد دائن مستحق للطالب حالياً.</div>
+                }
+                else
+                {
+                    @foreach (var semester in creditItems.GroupBy(x => new { x.SemesterId, x.SemesterName }))
+                    {
+                        <div class="semester-group">
+                            <div class="semester-heading"><span class="material-symbols-outlined">calendar_month</span><strong>@semester.Key.SemesterName</strong><span>@semester.Count() خدمات</span></div>
+                            <div class="table-responsive">
+                                <table class="refund-services-table">
+                                    <thead><tr><th>الخدمة</th><th>التصنيف</th><th>الرصيد الدائن</th><th>مبلغ الاسترداد</th></tr></thead>
+                                    <tbody>
+                                        @foreach (var item in semester)
+                                        {
+                                            <tr>
+                                                <td><strong>@item.ServiceName</strong></td><td>@item.CategoryName</td>
+                                                <td class="credit-amount" dir="ltr">@ReportFormatter.Amount(item.Available)</td>
+                                                <td><RadzenNumeric TValue="double" ShowUpDown="false" @bind-Value="item.RefundAmount" Min="0" Max="@((decimal)item.Available)" Format="#,##0.##" Change="@(_ => AllocationChanged(item))" Style="width:170px" TextAlign="TextAlign.Center" />
+                                                    @if (!string.IsNullOrWhiteSpace(item.Error)) { <small class="refund-error">@item.Error</small> }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                }
+
+                <div class="refund-summary"><span>إجمالي المبلغ المسترد</span><strong dir="ltr">@ReportFormatter.Amount(RefundTotal)</strong></div>
+                @if (!string.IsNullOrWhiteSpace(validationMessage))
+                {
+                    <div class="refund-validation"><span class="material-symbols-outlined">error</span>@validationMessage</div>
+                }
+                <div class="refund-submit">
+                    <button type="button" class="submit-btn" disabled="@(isSaving || RefundTotal <= 0)" @onclick="SaveAsync">
+                        @if (isSaving) { <span class="spinner-border spinner-border-sm"></span> }
+                        <span class="material-symbols-outlined">save</span> @_localizer["Save"]
+                    </button>
+                </div>
+            </section>
+        }
+    </div>
+}

@@ -1,0 +1,171 @@
+@page "/service-fee-claim"
+@attribute [Authorize]
+
+<header>
+    <h2>@T("Service fee claims", "مطالبات رسوم الخدمات")</h2>
+</header>
+<RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Path="msg-panel" Text="@T("Messages", "الرسائل")" />
+            <RadzenBreadCrumbItem Text="@T("Service fee claims", "مطالبات رسوم الخدمات")" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+<div class="content-body service-claims-page">
+    @if (isLoading)
+    {
+        <LoadingBar />
+    }
+    else
+    {
+        <section class="filter-card">
+            <div class="section-title">
+                <span class="material-symbols-outlined">filter_alt</span>
+                <div>
+                    <h3>@T("Filter service claims", "تصفية مطالبات الخدمات")</h3>
+                    <p>@T("Choose a service, then narrow the students using any of the optional filters.", "اختر خدمة ثم قم بتصفية الطلاب باستخدام أي من الحقول الاختيارية.")</p>
+                </div>
+            </div>
+            <div class="filters-grid">
+                <label class="service-filter">
+                    <span>@T("Service", "الخدمة")</span>
+                    <select class="form-control" value="@serviceId" @onchange="ServiceChanged">
+                        <option value="0">@T("Select a service", "اختر الخدمة")</option>
+                        @foreach (var item in services)
+                        {
+                            <option value="@item.Id">@Localized(item.Name, item.NameAr)</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>@T("Parent name", "اسم ولي الأمر")</span>
+                    <input class="form-control" @bind="parentName" @bind:event="oninput" placeholder="@T("Type a parent name", "اكتب اسم ولي الأمر")" />
+                </label>
+                <label>
+                    <span>@T("Fee greater than", "الرسوم أكبر من")</span>
+                    <input class="form-control" type="number" min="0" step="0.01" @bind="minimumFee" />
+                </label>
+                <label>
+                    <span>@T("Student status", "حالة الطالب")</span>
+                    <RadzenDropDown @bind-Value="statusIds" Data="@StatusOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" />
+                </label>
+                <label>
+                    <span>@T("Nationality", "الجنسية")</span>
+                    <RadzenDropDown @bind-Value="nationalityIds" Data="@NationalityOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" />
+                </label>
+                <label>
+                    <span>@T("Gender", "الجنس")</span>
+                    <RadzenDropDown @bind-Value="genderIds" Data="@GenderOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" />
+                </label>
+                <label>
+                    <span>@T("Class", "الصف")</span>
+                    <RadzenDropDown @bind-Value="classIds" Data="@ClassOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Placeholder="@T("All", "الكل")" class="form-control" />
+                </label>
+                <label>
+                    <span>@T("Semester", "الفصل الدراسي")</span>
+                    <RadzenDropDown @bind-Value="semesterIds" Data="@SemesterOptions" TextProperty="Name" ValueProperty="Id" Multiple="true" Chips="true" AllowClear="true" Change="SemesterChanged" Placeholder="@T("All", "الكل")" class="form-control" />
+                </label>
+            </div>
+            <div class="filter-actions">
+                <button type="button" class="btn clear-button" @onclick="ClearFilters">
+                    <span class="material-symbols-outlined">filter_alt_off</span>@T("Clear optional filters", "مسح عوامل التصفية")
+                </button>
+            </div>
+        </section>
+
+        <section class="claims-card">
+            <div class="card-heading">
+                <div>
+                    <span class="eyebrow">@T("Service claims", "مطالبات الخدمة")</span>
+                    <h3>@SelectedServiceName</h3>
+                </div>
+                <div class="heading-stats">
+                    <span class="count-pill">@string.Format(T("{0} students", "{0} طالب"), FilteredRows.Count())</span>
+                    <span class="amount-pill">@FormatAmount(FilteredRows.Sum(x => x.ClaimedAmount))</span>
+                </div>
+            </div>
+            <div class="select-tools">
+                <label>
+                    <input type="checkbox" checked="@AreAllVisibleSelected" @onchange="ToggleAllVisible" disabled="@(!SelectableFilteredRows.Any())" /> @T("Select all results", "تحديد جميع النتائج")
+                </label>
+                <span>@string.Format(T("{0} selected · {1}", "تم تحديد {0} · {1}"), SelectedRows.Count, FormatAmount(SelectedTotal))</span>
+            </div>
+            <div class="students-table-wrap">
+                <table class="students-table">
+                    <thead>
+                        <tr>
+                            <th class="check-column"></th>
+                            <th>@T("Student", "الطالب")</th>
+                            <th>@T("Parent", "ولي الأمر")</th>
+                            <th>@T("Status", "الحالة")</th>
+                            <th>@T("Nationality / gender", "الجنسية / الجنس")</th>
+                            <th>@T("Class", "الصف")</th>
+                            <th>@T("Mobile", "الجوال")</th>
+                            <th class="money-column">@T("Claimed amount", "مبلغ المطالبة")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in FilteredRows)
+                        {
+                            var selected = selectedStudentIds.Contains(row.Id);
+                            <tr class="@(selected ? "selected" : null) @(!row.HasMobile ? "disabled-row" : null)" @onclick="() => ToggleStudent(row)">
+                                <td class="check-column" @onclick:stopPropagation="true">
+                                    <input type="checkbox" checked="@selected" disabled="@(!row.HasMobile || isSending)" @onchange="_ => ToggleStudent(row)" />
+                                </td>
+                                <td>
+                                    <strong>@row.StudentName</strong><small>@row.StudentNumber</small>
+                                </td>
+                                <td>
+                                    <strong>@row.ParentName</strong>
+                                </td>
+                                <td>
+                                    <span class="status-tag" style="--status-color:@row.StatusColor">@row.Status</span>
+                                </td>
+                                <td>
+                                    @row.Nationality<small>@row.Gender</small>
+                                </td>
+                                <td>
+                                    @row.Class
+                                </td>
+                                <td>
+                                    <span dir="ltr">@(row.HasMobile ? row.Mobile : "—")</span>
+                                    @if (!row.HasMobile)
+                                    {
+                                        <small class="missing-mobile">@T("No mobile", "لا يوجد رقم جوال")</small>
+                                    }
+                                </td>
+                                <td class="money-column">
+                                    <strong dir="ltr">@FormatAmount(row.ClaimedAmount)</strong>
+                                </td>
+                            </tr>
+                        }
+                        @if (!FilteredRows.Any())
+                        {
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <span class="material-symbols-outlined">request_quote</span>
+                                        <strong>@(serviceId == 0 ? T("Select a service", "اختر الخدمة") : T("No matching service claims", "لا توجد مطالبات خدمة مطابقة"))</strong>
+                                        <span>@(serviceId == 0 ? T("Select the service whose outstanding fees you want to claim.", "اختر الخدمة التي تريد المطالبة برسومها المستحقة.") : T("Change the filters to broaden the results.", "غيّر عوامل التصفية لتوسيع النتائج."))</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="send-bar">
+                <div>
+                    <span class="material-symbols-outlined">campaign</span>
+                    <div>
+                        <strong>@string.Format(T("{0} claims selected", "تم تحديد {0} مطالبة"), SelectedRows.Count)</strong>
+                    </div>
+                </div>
+                <button type="button" class="btn send-button" disabled="@(!CanSend)" @onclick="SendClaimsAsync">
+                    <span class="material-symbols-outlined">@(isSending ? "progress_activity" : "send")</span>
+                    @(isSending ? T("Sending...", "جارٍ الإرسال...") : T("Send claims", "إرسال المطالبات"))
+                </button>
+            </div>
+        </section>
+    }
+</div>

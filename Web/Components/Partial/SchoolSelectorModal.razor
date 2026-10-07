@@ -1,0 +1,107 @@
+@attribute [Authorize]
+
+<div class="modal fade" id="SchoolsModal" tabindex="-1" aria-labelledby="SchoolsModalLabel" aria-hidden="true" data-bs-focus="false" @ref="modalElement">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="SchoolsModalLabel"> @_localizer["SelectSchool"]</h2>
+                <div style="text-align: left">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            @if (isProcessing)
+            {
+                <LoadingBar />
+            }
+            <EditForm Model="school" OnSubmit="SetSelectedSchool">
+                <div class="modal-body">
+                    <div class="p-2 text-end">
+                        @_localizer["School"]:
+                        <InputSelect class="form-control" required @bind-Value="selectedSchoolId">
+                            @foreach (var item in schools)
+                            {
+                                <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="submit-btn w-100">
+                        @_localizer["Select"]
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly UserManager<ApplicationUser> _userManager;
+    private IEnumerable<SchoolDto> schools = new List<SchoolDto>();
+    private Guid? selectedSchoolId;
+    private bool isProcessing = false;
+    private SchoolDto school = new();
+    private ElementReference modalElement;
+
+    [Inject]
+    public UserManager<ApplicationUser> UserManager { get; set; } = null!;
+
+    [JSInvokable("LoadSchools")]
+    public async Task LoadSchoolsAsync()
+    {
+        isProcessing = true;
+        var user = await UserManager.FindByIdAsync(await _userService.GetUserIdAsync());
+        if (user == null)
+        {
+            isProcessing = false;
+            return;
+        }
+
+        var permittedSchools = await _uow.UserSchools.FindAllAsync(x => x.UserId == user.Id, new[] { "School" });
+        schools = _mapper.Map<IEnumerable<SchoolDto>>(permittedSchools.Select(x => x.School).ToList());
+        if(schools.Any() && _appStateService.SchoolId != Guid.Empty)
+            selectedSchoolId = _appStateService.SchoolId;
+        else
+            selectedSchoolId = schools.FirstOrDefault()?.Id;
+        isProcessing = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _appStateService.InitializeAsync();
+        if (_appStateService.SchoolId != Guid.Empty)
+            selectedSchoolId = _appStateService.SchoolId;
+
+        _appStateService.OnChanged += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Setup modal events
+            await _js.InvokeVoidAsync("APP.setupSchoolModalEvents", DotNetObjectReference.Create(this));
+        }
+    }
+
+    public void Dispose()
+    {
+        _appStateService.OnChanged -= StateHasChanged;
+    }
+
+    private async Task SetSelectedSchool()
+    {
+        isProcessing = true;
+        if (selectedSchoolId.HasValue)
+        {
+            var isSchoolSelected = await _appStateService.SetSchoolAsync(selectedSchoolId.Value);
+            if (isSchoolSelected)
+            {
+                await _js.InvokeVoidAsync("APP.hideModal", "SchoolsModal");
+                _navigator.NavigateTo($"index/{_appStateService.SchoolId}");
+            }
+        }
+        isProcessing = false;
+    }
+}

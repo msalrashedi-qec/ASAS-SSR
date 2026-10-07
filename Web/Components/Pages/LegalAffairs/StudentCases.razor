@@ -1,0 +1,85 @@
+﻿@page "/student-cases/{id}"
+
+@attribute [Authorize(Policy = Policies.Requests.ViewLegalCases)]
+
+<header>
+    <h2>@_localizer["StudentLegalCases"]</h2>
+</header>
+<RadzenBreadCrumb>
+    <ChildContent>
+        <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+        <RadzenBreadCrumbItem Text="@_localizer["StudentLegalCases"]" />
+    </ChildContent>
+</RadzenBreadCrumb>
+
+<div class="content-body">
+
+    <div class="card m-2">
+        <div class="card-header">@_localizer["StudentInfo"]</div>
+            @if(isLoading)
+            {
+                <LoadingBar />
+            }
+        <div class="card-body row">
+            
+            @if (student is null && !isLoading)
+            {
+                <div class="bd-callout bd-callout-warning mt-3">@_localizer["NotFound"]</div>
+            }
+            else if (student is not null)
+            {
+                <div class="col-md-4 p-2">
+                <label>@_localizer["Name"]</label>
+                <div class="form-control">@student.Name @student.FatherName</div>
+            </div>
+                <div class="col-md-3 p-2">
+                    <label>@_localizer["Class"]</label>
+                    <div class="form-control">@StudentLevelAndClass</div>
+                </div>
+                <div class="col-md-2 p-2">
+                    <label>@_localizer["Status"]</label>
+                    <div class="form-control">@StudentStatus</div>
+                </div>
+                <div class="col-md-3 p-2">
+                    <label>@_localizer["RemainingAmount"]</label>
+                    <div class="form-control fw-bold text-center @(RemainingBalance > 0 ? "c-red" : "c-green")" dir="ltr">@ReportFormatter.Amount(RemainingBalance)</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if(student is not null && !isLoading)
+    {
+        <AuthorizeView Policy="@Policies.Requests.SubmitLegalCase">
+        <Authorized>
+            <div class="modal fade" id="DetailsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="DetailsModalLabel" aria-hidden="true" data-bs-focus="false">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable student-case-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title" id="DetailsModalLabel"> @_localizer["Details"]</h2>
+                            <div style="text-align: left">
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                        </div>
+                        <div class="modal-body">
+                            <iframe src="@submitUrl" class="student-case-frame" title="@_localizer["Details"]"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pb-3">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#DetailsModal">
+                    @_localizer["New"] <span class="material-symbols-outlined">add_circle</span>
+                </button>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+  
+    <iframe src="@url" width="100%" height="800" style="border:none;"></iframe>
+    }
+    
+</div>
+
+
+

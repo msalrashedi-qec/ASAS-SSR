@@ -1,0 +1,18 @@
+﻿@page "/legal-cases-list"
+
+@attribute [Authorize(Policy = Policies.Requests.ViewLegalCases)]
+
+<header>
+    <h2>@_localizer["LegalCases"]</h2>
+</header>
+<RadzenBreadCrumb>
+    <ChildContent>
+        <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+        <RadzenBreadCrumbItem Text="@_localizer["LegalCases"]" />
+    </ChildContent>
+</RadzenBreadCrumb>
+
+<div class="content-body">
+    <iframe src="@url" width="100%" height="800" style="border:none;"></iframe>
+</div>
+

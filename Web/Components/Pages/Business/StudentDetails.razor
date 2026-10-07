@@ -1,0 +1,179 @@
+@page "/student-details/{parentId}"
+@page "/student-details/{parentId}/{id}"
+
+@attribute [Authorize]
+
+
+<PageTitle>@_localizer["StudentDetails"]</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>@_localizer["StudentDetails"]</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["ParentDetails"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+
+<div class="content-body">
+    <div class="card">
+        <div class="card-header">
+            @_localizer["ParentDetails"]
+        </div>
+        <div class="card-body row">
+            <div class="col-md-3 p-2">
+                @_localizer["Name"]
+                <label class="form-control">@_parent.Name</label>
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["NationalID"]
+                <label class="form-control">@_parent.NationalID</label>
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["Mobile"]
+                <label class="form-control">@_parent.Mobile</label>
+            </div>
+            <div class="col-md-3 p-2">
+                @_localizer["Address"]
+                <label class="form-control">@_parent.HomeAddress</label>
+            </div>
+        </div>
+    </div>
+    <EditForm Model="@_model" OnValidSubmit="SaveDataAsync">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-8">
+                        @_localizer["StudentInfo"] &ensp; @if(_model.Id != Guid.Empty)
+                        {
+                            <label class="tag bg-primary fs-6 px-3" style="direction:ltr !important;"> @_model.Code </label>
+                        }
+                    </div>
+                    <div class="col-md-4 align-content-end">
+                        <label class="tag bg-warning  fs-6">@(Id != null ? _localizer["SelectedLanguage"] == "ar" ? _model.StatusNameAr : _model.StatusName : _localizer["NewStudent"])</label>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="card-body">
+            
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row">
+                   
+                   
+                </div>
+                <div class="row">
+                    <div class="col-md-3 p-2">
+                        @_localizer["Name"]
+                        <InputText @bind-Value="_model.Name" id="Name" class="form-control" required autofocus MaxLength="100" />
+                    </div>
+                 
+                    <div class="col-md-3 p-2">
+                        @_localizer["FatherName"]
+                        <InputText @bind-Value="_model.FatherName" id="FatherName" class="form-control" required MaxLength="100" />
+                    </div>
+
+                    <div class="col-md-3 p-2">
+                        @_localizer["BirthDate"]
+                        <RadzenDatePicker @bind-Value=@_model.BirthDate DateFormat="dd/MM/yyyy" ShowCalendarWeek AllowClear="false" Style="width:100%" Change="CalculateAge" />
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["Age"]
+                        <label class="form-control">@studentAge</label>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["NationalID"]
+                        <InputText @bind-Value="_model.NationalID" id="NationalID" class="form-control text-center" required MaxLength="10" />
+                    </div>
+
+                    <div class="col-md-3 p-2">
+                        @_localizer["Gender"]
+                        <RadzenDropDown @bind-Value=@_model.GenderId Data=@genders TextProperty="@_localizer["FieldName"]" ValueProperty="Id" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3 p-2">
+                        @_localizer["Nationality"]
+                        <RadzenDropDown @bind-Value=@_model.NationalityId Data=@nationalities TextProperty="@_localizer["FieldName"]" ValueProperty="Id" AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" class="form-control" />
+                    </div>
+                  
+                    <div class="col-md-3 p-2">
+                        @_localizer["District"]
+                        <RadzenDropDown @bind-Value=@_model.DistrictId Data=@districts TextProperty="@_localizer["FieldName"]" ValueProperty="Id" AllowFiltering=true FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3 p-2">
+                        @_localizer["HomeAddress"]
+                        <InputText @bind-Value="_model.HomeAddress" id="HomeAddress" required class="form-control" MaxLength="150" />
+                    </div>
+
+                    <div class="col-md-3 p-2">
+                        @_localizer["HomePhone"]
+                        <InputText @bind-Value="_model.HomePhone" id="HomePhone" class="form-control text-center" MaxLength="10" />
+                    </div>
+               
+                    <div class="col-md-3 p-2">
+                        @_localizer["ContactPerson"]
+                        <InputText @bind-Value="_model.ContactPerson" id="ContactPerson" class="form-control" MaxLength="100" />
+                    </div>
+
+                    <div class="col-md-3 p-2">
+                        @_localizer["ContactMobile"]
+                        <InputText @bind-Value="_model.ContactMobile" id="ContactMobile" class="form-control text-center" MaxLength="10" />
+                    </div>
+
+                    <div class="col-12 p-2">
+                        @_localizer["Comments"]
+                        <InputTextArea @bind-Value="_model.Comments" id="Comments" class="form-control bg-light-warning" MaxLength="1000" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                @_localizer["RegistrationDetails"]
+            </div>
+            <div class="card-body row">
+                <div class="col-md-2 p-2">
+                    @_localizer["RegisterForYear"]
+                    <RadzenDropDown @bind-Value=@_model.RegisteredForYearId Data=@years.Where(x => x.IsCurrent || x.IsNext).ToList() Change="OnYearChanged"
+                                    TextProperty="Name" ValueProperty="Id" class="form-control" />
+                </div>
+                <div class="col-md-2 p-2">
+                    @_localizer["RegistrationDate"]
+                    <RadzenDatePicker @bind-Value=@_model.RegistrationDate DateFormat="dd/MM/yyyy" Max="@maxDate" ShowCalendarWeek AllowClear="false" Style="width:100%" />
+                </div>
+                <div class="col-md-4 p-2">
+                    @_localizer["Class"]
+                    <InputSelect class="form-control" @bind-value="_model.ClassId" required>
+                        @foreach (var item in schoolClasses)
+                        {
+                            <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                @if(_model.StatusId > 5)
+                {
+                    <div class="col-md-4 p-2">
+                        @_localizer["Semester"]
+                        <RadzenDropDown @bind-Value=@_model.Semesters Data=@semesters TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                        Multiple=true Chips=true class="form-control" />
+                    </div>
+                }
+               
+            </div>
+            <div class="card-footer text-center">
+                <button type="submit" class="submit-btn">@_localizer["Save"]</button>
+            </div>
+        </div>
+    </EditForm>
+</div>

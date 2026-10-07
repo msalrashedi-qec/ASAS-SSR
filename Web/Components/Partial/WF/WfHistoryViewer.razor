@@ -1,0 +1,57 @@
+﻿<section class="box">
+    <div class="section-heading">
+        <span class="material-symbols-outlined">chronic</span>
+        <h2>
+            @_localizer["History"]
+        </h2>
+    </div>
+    <div class="content-body">
+        @if (Histories != null && Histories.Any())
+        {
+            foreach (var item in Histories)
+            {
+                <div class="history-table px-3">
+                    <div class="row">
+                        <div class="col-md-3 p-2">
+                            <span class="material-symbols-outlined c-red">
+                                bolt
+                            </span> <span style="font-size:11px;font-weight:bold;position: relative;">@(_localizer["SelectedLanguage"] == "ar" ? item.ActionTypeNameAr : item.ActionTypeName)</span>
+                        </div>
+                        <div class="col-md-4 p-2">
+                            <span class="material-symbols-outlined c-blue">
+                                settings
+                            </span> <span style="font-size:11px;font-weight:bold;position: relative;">@(_localizer["SelectedLanguage"] == "ar" ? item.TaskNameAr : item.TaskName)</span>
+                        </div>
+                        <div class="col-md-3 p-2">
+                            <span class="material-symbols-outlined c-blue">
+                                person_outline
+                            </span> <span style="font-size:11px;font-weight:bold;position: relative;">@item.UserName</span>
+                        </div>
+                        <div class="col-md-2 p-2">
+                            <span class="material-symbols-outlined c-blue">
+                                calendar_month
+                            </span>  <span style="font-size:11px;font-weight:bold;position: relative;">@item.CreatedOn.ToString("dd/MM/yyyy HH:mm tt")</span>
+                        </div>
+                    </div>
+                    <div class="p-2" style="font-size: 12px;">
+                        @item.Comments
+                    </div>
+                    <div class="px-2">
+                        @foreach (var attachment in item.Attachments)
+                        {
+                            <a href="@($"{_navigator.BaseUri}uploads/workflow/{Uri.EscapeDataString(attachment.FilePath ?? string.Empty)}")"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="c-blue px-3">
+                                <span class="material-symbols-outlined align-middle">attachment</span>
+                                @attachment.FileName
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+

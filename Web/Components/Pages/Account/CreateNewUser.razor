@@ -1,0 +1,96 @@
+﻿@page "/Account/Register"
+@* @attribute [Authorize(Policy = Policies.SystemAdmin.Manage)]
+ *@
+
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender EmailSender
+@inject ILogger<CreateNewUser> Logger
+
+
+<PageTitle>Register</PageTitle>
+@if (isLoading)
+{
+    <LoadingBar />
+}
+<header>
+    <div class="p-2">
+        <h2>@_localizer["UserDetails"]</h2>
+    </div>
+</header>
+<div class="p-2">
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Path="cpanel" Text="@_localizer["Cpanel"]" />
+            <RadzenBreadCrumbItem Path="system/users" Text="@_localizer["UsersList"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["UserDetails"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+</div>
+<div class="content-body">
+    <div class="card p-4">
+        <EditForm Model="_model" OnValidSubmit="RegisterUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="bd-callout bd-callout-danger" />
+            <div class="row">
+                <div class="col-md-6 p-2">
+                    @_localizer["Name"]:
+                    <InputText @bind-Value="_model.Name" id="_model.Name" class="form-control" />
+                    <ValidationMessage For="() => _model.Name" class="text-danger" />
+                </div>
+
+                <div class="col-md-6 p-2">
+                    @_localizer["Email"]:
+                    <InputText @bind-Value="_model.Email" id="_model.Email" class="form-control" autocomplete="username" aria-required="true" />
+                    <ValidationMessage For="() => _model.Email" class="text-danger" />
+                </div>
+                <div class="col-md-6 p-2">
+                    @_localizer["Mobile"]:
+                    <InputText @bind-Value="_model.PhoneNumber" id="_model.Mobile" class="form-control" />
+                    <ValidationMessage For="() => _model.PhoneNumber" class="text-danger" />
+                </div>
+                <div class="col-md-6 p-2">
+                    @_localizer["UserName"]:
+                    <InputText @bind-Value="_model.UserName" id="_model.UserName" class="form-control" autocomplete="username" aria-required="true" />
+                    <ValidationMessage For="() => _model.UserName" class="text-danger" />
+                </div>
+                <div class="col-md-6 p-2">
+                    @_localizer["Password"]:
+                    <InputText type="password" @bind-Value="_model.Password" id="_model.Password" class="form-control" autocomplete="new-password" aria-required="true" />
+                    <ValidationMessage For="() => _model.Password" class="text-danger" />
+                </div>
+                <div class="col-md-6 p-2">
+                    @_localizer["Roles"]
+                    <RadzenDropDown @bind-Value=@_model.GrantedRoles Data=@roles TextProperty="Name" ValueProperty="Id" AllowVirtualization="true"
+                                    AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                    Multiple=true Chips=true class="form-control" />
+                </div>
+                <div class="col-md-6 p-3">
+                    @_localizer["Schools"]
+                    <RadzenDropDown @bind-Value=@_model.GrantedSchools Data=@schools TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                    Multiple=true Chips=true class="form-control" />
+                </div>
+            </div>
+            <div class="text-center py-3">
+                <button type="submit" class="submit-btn" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>@_localizer["Processing"]</span>
+                    }
+                    else
+                    {
+                        <span>@_localizer["Save"]</span>
+                    }
+                </button>
+            </div>
+
+        </EditForm>
+    </div>
+
+</div>
+

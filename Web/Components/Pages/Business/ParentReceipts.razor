@@ -1,0 +1,105 @@
+@page "/parent-receipts/{ParentId:guid}"
+@attribute [Authorize(Policy = Policies.ParentReceipts.View)]
+
+<PageTitle>سندات ولي الأمر</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>سندات ولي الأمر</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="سندات ولي الأمر" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body receipts-page">
+    @if (!isLoading && parent is null)
+    {
+        <div class="p-4 text-center bg-light-warning">لم يتم العثور على ولي الأمر.</div>
+    }
+    else if (parent is not null)
+    {
+        <section class="receipts-heading">
+            <div>
+                <span class="material-symbols-outlined">family_restroom</span>
+                <div>
+                    <small>ولي الأمر</small>
+                    <h3>@parent.Name</h3>
+                    <p dir="ltr">@parent.Mobile</p>
+                </div>
+            </div>
+            <a class="submit-btn" href="payment/@ParentId">
+                <span class="material-symbols-outlined">add_card</span> سند جديد
+            </a>
+        </section>
+
+        <section class="receipts-summary">
+            <div><span>عدد السندات</span><strong>@receipts.Count</strong></div>
+            <div><span>إجمالي المسدد</span><strong dir="ltr">@ReportFormatter.Amount(receipts.Sum(x => x.Total))</strong></div>
+            <div><span>آخر سند</span><strong>@(receipts.Count == 0 ? "—" : ReportFormatter.Date(receipts.Max(x => x.Date)))</strong></div>
+        </section>
+
+        <section class="receipts-card">
+            <div class="receipts-toolbar">
+                <div class="receipt-search">
+                    <span class="material-symbols-outlined">search</span>
+                    <input class="form-control" @bind="searchText" @bind:event="oninput" placeholder="بحث برقم السند أو اسم الطالب" />
+                </div>
+            </div>
+
+            @if (FilteredReceipts.Count == 0)
+            {
+                <div class="receipts-empty">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <strong>لا توجد سندات قبض</strong>
+                    <p>ستظهر سندات السداد الخاصة بطلاب ولي الأمر هنا.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table receipts-table">
+                        <thead>
+<tr>
+<th>رقم السند</th>
+<th>التاريخ</th>
+<th>الطالب</th>
+<th>طريقة الدفع</th>
+<th>المبلغ</th>
+<th class="actions-column">الإجراءات</th>
+</tr>
+</thead>
+                        <tbody>
+                            @foreach (var receipt in FilteredReceipts)
+                            {
+                                <tr>
+                                    <td><strong class="receipt-sn" dir="ltr">@receipt.Number.ToString("D6")</strong></td>
+                                    <td dir="ltr">@ReportFormatter.Date(receipt.Date)</td>
+                                    <td><strong>@receipt.StudentName</strong><small dir="ltr">@receipt.StudentCode</small></td>
+                                    <td><span class="payment-method">@receipt.PaymentMethod</span></td>
+                                    <td><strong dir="ltr">@ReportFormatter.Amount(receipt.Total)</strong></td>
+                                    <td>
+                                        <div class="receipt-actions">
+                                            <AuthorizeView Policy="@Policies.DebitReceipts.Edit">
+                                                <Authorized>
+                                                    <a class="action-button edit" href="receipt-edit/@ParentId/@receipt.Id" title="تعديل السند"><span class="material-symbols-outlined">edit</span></a>
+                                                </Authorized>
+                                            </AuthorizeView>
+                                            <a class="action-button print" href="payment/@ParentId/@receipt.Id" title="عرض وطباعة السند"><span class="material-symbols-outlined">print</span></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>

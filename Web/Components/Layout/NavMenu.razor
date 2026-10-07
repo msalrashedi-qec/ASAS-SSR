@@ -1,0 +1,123 @@
+﻿
+@attribute [Authorize]
+<ul class="nav-menu-list">
+    
+    <AuthorizeView>
+        <Authorized>
+           <li class="active">
+        <a href="index" @onclick="CloseModal" class="nav-menu-link">
+            <i class="material-symbols-outlined c-primary">
+                home
+            </i>
+            <span class="menu-text">@_localizer["Home"]</span>
+        </a>
+    </li>
+        </Authorized>
+</AuthorizeView>
+    
+    <li class="active">
+        <a href="inbox" @onclick="CloseModal" class="nav-menu-link">
+            <span class="menu-icon-wrapper">
+                <i class="material-symbols-outlined">
+                    clinical_notes
+                </i>
+                @if (_incomingRequestCount.HasValue)
+                {
+                    <span class="requests-count-badge @(_incomingRequestCount == 0 ? "is-empty" : null)"
+                          title="@_localizer["IncomingRequestsCount", _incomingRequestCount]"
+                          aria-label="@_localizer["IncomingRequestsCount", _incomingRequestCount]">
+                        @FormattedIncomingRequestCount
+                    </span>
+                }
+            </span>
+            <span class="menu-text">@_localizer["Requests"]</span>
+        </a>
+    </li>
+
+   
+    <AuthorizeView Policy="@Policies.Requests.ViewLegalCases" Context="AuthContext">
+        <Authorized>
+        <li class="active">
+            <a href="legal-cases-list" @onclick="CloseModal" class="nav-menu-link">
+                <span class="menu-icon-wrapper">
+                    <i class="material-symbols-outlined">
+                            balance
+                    </i>
+                    @* @if (_incomingRequestCount.HasValue)
+                    {
+                        <span class="requests-count-badge @(_incomingRequestCount == 0 ? "is-empty" : null)"
+                              title="@_localizer["IncomingRequestsCount", _incomingRequestCount]"
+                              aria-label="@_localizer["IncomingRequestsCount", _incomingRequestCount]">
+                            @FormattedIncomingRequestCount
+                        </span>
+                    } *@
+                </span>
+                <span class="menu-text">@_localizer["LegalCases"]</span>
+            </a>
+        </li>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Policy="@Policies.StudentAssignmentInClassRooms.Manage" Context="AuthContext">
+        <Authorized>
+            <li class="active">
+                <a href="classroom-allocation" @onclick="CloseModal" class="nav-menu-link">
+                    <i class="material-symbols-outlined">meeting_room</i>
+                    <span class="menu-text">@_localizer["ClassroomAllocation"]</span>
+                </a>
+            </li>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Policy="@Policies.StudentAssignmentInBuses.Manage" Context="AuthContext">
+        <Authorized>
+            <li class="active">
+                <a href="bus-student-allocation" @onclick="CloseModal" class="nav-menu-link">
+                    <i class="material-symbols-outlined">directions_bus</i>
+                    <span class="menu-text">@_localizer["BusAllocation"]</span>
+                </a>
+            </li>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Policy="@Policies.SMS.Send" Context="AuthContext">
+        <Authorized>
+            <li class="active">
+                <a href="msg-panel" @onclick="CloseModal" class="nav-menu-link">
+                    <i class="material-symbols-outlined">mobile_chat</i>
+                    <span class="menu-text">@_localizer["Messages"]</span>
+                </a>
+            </li>
+        </Authorized>
+    </AuthorizeView>
+    
+    <AuthorizeView Policy="@Policies.Reports.View" Context="AuthContext">
+        <Authorized>
+            <li class="active">
+                <a href="reports" @onclick="CloseModal" class="nav-menu-link">
+                    <i class="material-symbols-outlined">
+                        receipt_long
+                    </i>
+                    <span class="menu-text">@_localizer["Reports"]</span>
+                </a>
+            </li>
+        </Authorized>
+    </AuthorizeView>
+    
+    <AuthorizeView Policy="@Policies.SystemAdmin.Manage" Context="AuthContext">
+        <Authorized>
+            <li class="active">
+                <a href="cpanel" @onclick="CloseModal" class="nav-menu-link">
+                    <i class="material-symbols-outlined">
+                        settings
+                    </i>
+                    <span class="menu-text">@_localizer["SystemSetting"]</span>
+                </a>
+            </li>
+         </Authorized>
+    </AuthorizeView>
+
+</ul>
+
+
+

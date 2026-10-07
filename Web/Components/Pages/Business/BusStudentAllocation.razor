@@ -1,0 +1,255 @@
+@page "/bus-student-allocation"
+@attribute [Authorize]
+
+<header>
+    <h2>@T("School bus allocation", "تسكين الطلاب في الحافلات المدرسية")</h2>
+</header>
+    <RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@T("Home", "الرئيسية")" />
+            <RadzenBreadCrumbItem Text="@T("Bus allocation", "تسكين الحافلات")" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body allocation-page">
+    <div class="p-4">
+        @if (isLoading)
+        {
+            <LoadingBar />
+        }
+        else
+        {
+            @if (buses.Count == 0)
+            {
+                <div class="alert alert-warning mt-3">@T("No buses are configured for this school.", "لا توجد حافلات معرفة لهذه المدرسة.")</div>
+            }
+            else
+            {
+                <div class="allocation-workspace">
+                    <section class="students-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="eyebrow">@T("Waiting list", "قائمة الانتظار")</span>
+                                <h3>@T("Unallocated students", "الطلاب غير المسكنين")</h3>
+                            </div>
+                            <span class="count-pill">@UnallocatedRows.Count()</span>
+                        </div>
+
+                        <div class="students-tools">
+                            <label class="search-box" for="student-search">
+                                <span class="material-symbols-outlined">search</span>
+                                <input id="student-search" @bind="searchText" @bind:event="oninput" placeholder="@T("Search by student name or number", "ابحث باسم الطالب أو رقمه")" />
+                            </label>
+                            <label class="select-all">
+                                <input type="checkbox" checked="@AreAllVisibleSelected" @onchange="ToggleAllVisible" disabled="@(!FilteredUnallocatedRows.Any())" />
+                                <span>@T("Select all", "تحديد الكل")</span>
+                            </label>
+                        </div>
+
+                        <div class="students-table-wrap">
+                            <table class="students-table">
+                                <thead>
+                                    <tr>
+                                        <th class="check-column"></th>
+                                        <th>@T("Student no.", "رقم الطالب")</th>
+                                        <th>@T("Student", "اسم الطالب")</th>
+                                        <th class="sortable-header">
+                                            <button type="button" class="sort-button @(studentSortField == StudentSortField.LevelGrade ? "active" : null)" @onclick="() => ChangeSort(StudentSortField.LevelGrade)">
+                                                <span>@T("Level / grade", "المرحلة والصف")</span>
+                                                <span class="material-symbols-outlined">@SortIcon(StudentSortField.LevelGrade)</span>
+                                            </button>
+                                        </th>
+                                        <th class="sortable-header">
+                                            <button type="button" class="sort-button @(studentSortField == StudentSortField.Service ? "active" : null)" @onclick="() => ChangeSort(StudentSortField.Service)">
+                                                <span>@T("Service", "الخدمة المشترك فيها")</span>
+                                                <span class="material-symbols-outlined">@SortIcon(StudentSortField.Service)</span>
+                                            </button>
+                                        </th>
+                                        <th>@T("District", "الحي")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in FilteredUnallocatedRows)
+                                    {
+                                        var isSelected = selectedSubscriptionIds.Contains(row.SubscriptionId);
+                                        <tr class="@(isSelected ? "selected draggable-student" : null)"
+                                            draggable="@(isSelected ? "true" : "false")"
+                                            title="@(isSelected ? T("Drag the selected students to the bus", "اسحب الطلاب المحددين إلى الحافلة") : null)"
+                                            @ondragstart="() => BeginDraggingSelection(row.SubscriptionId)"
+                                            @ondragend="EndDraggingSelection"
+                                            @onclick="() => ToggleStudent(row.SubscriptionId)">
+                                            <td class="check-column" @onclick:stopPropagation="true">
+                                                <input type="checkbox" checked="@isSelected" @onchange="_ => ToggleStudent(row.SubscriptionId)" aria-label="@string.Format(T("Select {0}", "تحديد {0}"), row.StudentName)" />
+                                            </td>
+                                            <td><span class="student-number">@row.StudentNumber</span></td>
+                                            <td><strong>@row.StudentName</strong></td>
+                                            <td><span class="level-text">@row.LevelName</span><small>@row.ClassName</small></td>
+                                            <td>@row.ServiceName</td>
+                                            <td>@row.DistrictName</td>
+                                        </tr>
+                                    }
+                                    @if (!FilteredUnallocatedRows.Any())
+                                    {
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="empty-students">
+                                                    <span class="material-symbols-outlined">how_to_reg</span>
+                                                    <strong>@T("No unallocated students", "لا يوجد طلاب غير مسكنين")</strong>
+                                                    <span>@T("All matching students have been allocated.", "تم تسكين جميع الطلاب المطابقين.")</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="allocation-action-bar">
+                            <span>
+                                @string.Format(T("{0} students selected", "تم تحديد {0} طالب"), selectedSubscriptionIds.Count)
+                                @if (selectedSubscriptionIds.Count > 0)
+                                {
+                                    <small>@T("Drag any selected row to the bus", "اسحب أي طالب محدد إلى الحافلة")</small>
+                                }
+                            </span>
+                            <button class="btn allocate-button" disabled="@(!CanAllocateSelection)" @onclick="AllocateSelected">
+                                <span class="material-symbols-outlined">airline_seat_recline_extra</span>
+                                @T("Allocate to bus", "تسكين في الحافلة")
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="bus-panel">
+                        @if (SelectedBus is null)
+                        {
+                            <div class="bus-empty-state">
+                                <span class="material-symbols-outlined">directions_bus</span>
+                                <h3>@T("Select a bus", "اختر حافلة")</h3>
+                                <p>@T("Choose a bus above to display its seats.", "اختر حافلة من الأعلى لعرض مقاعدها.")</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bus-header">
+                                <div class="bus-identity">
+                                    <span class="bus-icon material-symbols-outlined">directions_bus</span>
+                                    <div class="inline-bus-selector">
+                                        <label for="selected-bus">@T("Current bus", "الحافلة الحالية")</label>
+                                        <select id="selected-bus" class="form-control" value="@selectedBusId" @onchange="BusChanged">
+                                            @foreach (var bus in buses)
+                                            {
+                                                <option value="@bus.Id">@bus.Name · @bus.PlateNo</option>
+                                            }
+                                        </select>
+                                        <span class="plate-number">@SelectedBus.PlateNo</span>
+                                    </div>
+                                </div>
+                                <div class="bus-header-actions">
+                                    <div class="capacity-meter">
+                                        <div class="capacity-value"><strong>@SelectedBusOccupancy</strong><span>/ @SelectedBus.Capacity</span></div>
+                                        <div class="capacity-track"><span style="width: @SelectedBusOccupancyPercent%"></span></div>
+                                    </div>
+                                    <button class="btn save-button" disabled="@(isSaving || !HasChanges)" @onclick="SaveAsync">
+                                        <span class="material-symbols-outlined">@(isSaving ? "progress_activity" : "save")</span>
+                                        @T("Save changes", "حفظ التغييرات")
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bus-vehicle @(isDraggingSelection ? (CanAllocateSelection ? "drop-ready" : "drop-unavailable") : null)"
+                                 @ondragover:preventDefault="true"
+                                 @ondrop="DropSelected">
+                                @if (isDraggingSelection)
+                                {
+                                    <div class="bus-drop-message">
+                                        <span class="material-symbols-outlined">move_to_inbox</span>
+                                        <strong>@(CanAllocateSelection ? string.Format(T("Drop {0} students here", "أفلت {0} طالب هنا"), selectedSubscriptionIds.Count) : T("The selected students cannot be allocated to this bus", "لا يمكن تسكين الطلاب المحددين في هذه الحافلة"))</strong>
+                                    </div>
+                                }
+                                <span class="bus-wheel wheel-front-left"></span>
+                                <span class="bus-wheel wheel-front-right"></span>
+                                <span class="bus-wheel wheel-rear-left"></span>
+                                <span class="bus-wheel wheel-rear-right"></span>
+                                <div class="bus-shell">
+                                    <div class="bus-front-cap">
+                                        <span class="front-light"></span>
+                                        <span class="bus-front-mark material-symbols-outlined">directions_bus</span>
+                                        <span class="front-light"></span>
+                                    </div>
+                                    <div class="bus-windshield">
+                                        <div class="crew-info">
+                                            <div>
+                                                <span class="material-symbols-outlined">airline_seat_recline_normal</span>
+                                                <small>@T("Driver", "السائق")</small>
+                                                <strong>@(SelectedBusAssignment?.Driver.Name ?? T("Not specified", "غير محدد"))</strong>
+                                            </div>
+                                            <div>
+                                                <span class="material-symbols-outlined">support_agent</span>
+                                                <small>@T("Supervisor", "المشرف/ة")</small>
+                                                <strong>@(SelectedBusAssignment?.SupervisorName ?? T("Not specified", "غير محدد"))</strong>
+                                            </div>
+                                            <div>
+                                                <span class="material-symbols-outlined">phone</span>
+                                                <small>@T("Supervisor mobile", "رقم المشرف/ة")</small>
+                                                <strong class="crew-mobile">@(SelectedBusAssignment?.SupervisorMobile ?? T("Not specified", "غير محدد"))</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bus-stats">
+                                        <div><span class="stat-icon total"><span class="material-symbols-outlined">event_seat</span></span><strong>@SelectedBus.Capacity</strong><small>@T("Seats", "عدد الكراسي")</small></div>
+                                        <div><span class="stat-icon occupied"><span class="material-symbols-outlined">person</span></span><strong>@SelectedBusOccupancy</strong><small>@T("Occupied", "المسكن")</small></div>
+                                        <div><span class="stat-icon available"><span class="material-symbols-outlined">check_circle</span></span><strong>@SelectedBusAvailableSeats</strong><small>@T("Available", "غير المسكن")</small></div>
+                                    </div>
+                                    <div class="bus-aisle-label">@T("FRONT", "مقدمة الحافلة")</div>
+                                    <div class="seats-grid">
+                                        @foreach (var seat in SelectedBusSeats)
+                                        {
+                                            <div class="seat-position @(seat.IsAisleAfter ? "aisle-after" : null)">
+                                                @if (seat.Student is not null)
+                                                {
+                                                    <button class="bus-seat occupied-seat" title="@string.Format(T("Return {0} to waiting list?", "إعادة {0} إلى قائمة الانتظار؟"), seat.Student.StudentName)" @onclick="() => UnallocateStudent(seat.Student)">
+                                                        <span class="seat-index">@seat.Number</span>
+                                                        <span class="material-symbols-outlined">person</span>
+                                                        <strong>@seat.Student.StudentNumber</strong>
+                                                        <small>@seat.Student.StudentName</small>
+                                                    </button>
+                                                }
+                                                else if (seat.IsOccupied)
+                                                {
+                                                    <div class="bus-seat occupied-seat reserved-seat text-center" title="@T("An existing allocation outside the current list", "تسكين قائم خارج القائمة الحالية")">
+                                                        <span class="seat-index">@seat.Number</span>
+                                                        <span class="material-symbols-outlined">person</span>
+                                                        <strong>@T("Occupied", "مشغول")</strong>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="bus-seat empty-seat text-center">
+                                                        <span class="seat-index">@seat.Number</span>
+                                                        <span class="material-symbols-outlined">event_seat</span>
+                                                        <strong>@T("Available", "متاح")</strong>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="bus-rear-cap">
+                                        <span class="rear-light"></span>
+                                        <span class="rear-plate">@SelectedBus.PlateNo</span>
+                                        <span class="rear-light"></span>
+                                    </div>
+                                    <div class="bus-rear-bumper"></div>
+                                </div>
+                            </div>
+
+                            <div class="seat-legend">
+                                <span><i class="occupied-key"></i>@T("Allocated", "مقعد مسكن")</span>
+                                <span><i class="available-key"></i>@T("Available", "مقعد متاح")</span>
+                            </div>
+                        }
+                    </section>
+                </div>
+            }
+        }
+    </div>
+</div>

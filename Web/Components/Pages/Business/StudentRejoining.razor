@@ -1,0 +1,104 @@
+﻿@page "/student-rejoin/{id}"
+
+@attribute [Authorize]
+
+
+<PageTitle>@_localizer["StudentRejoining"]</PageTitle>
+
+@if (isLoading)
+{
+    <LoadingBar />
+}
+
+<header>
+    <h2>@_localizer["StudentRejoining"]</h2>
+</header>
+<RadzenBreadCrumb>
+        <ChildContent>
+            <RadzenBreadCrumbItem Path="index" Text="@_localizer["Home"]" />
+            <RadzenBreadCrumbItem Text="@_localizer["StudentRejoining"]" />
+        </ChildContent>
+    </RadzenBreadCrumb>
+
+<div class="content-body">
+    <EditForm Model="@_model" OnValidSubmit="SaveDataAsync">
+        <div class="card">
+            <div class="card-header">
+                @_localizer["StudentInfo"]
+            </div>
+            <div class="card-body">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="row">
+                    <div class="col-md-3 p-2">
+                        @_localizer["School"]
+                        <label class="form-control bg-yellow">@(_localizer["SelectedLanguage"] == "ar" ? _model.SchoolNameAr : _model.SchoolName)</label>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["StudentID"]
+                        <label class="form-control text-center">@_model.Code</label>
+                    </div>
+                    
+                    <div class="col-md-3 p-2">
+                        @_localizer["Name"]
+                        <label class="form-control">@($"{_model.Name} {_model.FatherName}")</label>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["BirthDate"]
+                        <label class="form-control text-center">@_model.BirthDate.ToString("dd/MM/yyyy")</label>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["NationalID"]
+                        <label class="form-control text-center">@_model.NationalID</label>
+                    </div>
+                    <div class="col-md-3 p-2">
+                        @_localizer["Nationality"]
+                        <label class="form-control">@(_localizer["SelectedLanguage"] == "ar" ? _model.NationalityNameAr : _model.NationalityName)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                @_localizer["RegistrationDetails"]
+            </div>
+            <div class="card-body row">
+                <div class="col-md-3 p-2">
+                    @_localizer["RegisterForYear"]
+                    <RadzenDropDown @bind-Value=@_model.RegisteredForYearId Data=@years.Where(x => x.IsCurrent || x.IsNext).ToList() Change="OnYearChanged"
+                                    TextProperty="Name" ValueProperty="Id" class="form-control" />
+                </div>
+                <div class="col-md-3 p-2">
+                    @_localizer["RegistrationDate"]
+                    <RadzenDatePicker @bind-Value=@_model.RegistrationDate DateFormat="dd/MM/yyyy" Max="@maxDate" ShowCalendarWeek AllowClear="false" Style="width:100%" />
+                </div>
+                <div class="col-md-3 p-2">
+                    @_localizer["Class"]
+                    <InputSelect class="form-control" @bind-value="_model.ClassId" required>
+                        @foreach (var item in schoolClasses)
+                        {
+                            <option value="@item.Id">@(_localizer["SelectedLanguage"] == "ar" ? item.NameAr : item.Name)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                @if (_model.StatusId > 5)
+                {
+                    <div class="col-md-3 p-2">
+                        @_localizer["Semester"]
+                        <RadzenDropDown @bind-Value=@_model.Semesters Data=@semesters TextProperty="@_localizer["FieldName"]" ValueProperty="Id"
+                                        Multiple=true Chips=true class="form-control" />
+                    </div>
+                }
+               
+            </div>
+            @if(_model.Id != Guid.Empty)
+            {
+                <div class="card-footer text-center">
+                    <button type="submit" class="submit-btn">@_localizer["Save"]</button>
+                </div>
+            }
+            
+        </div>
+    </EditForm>
+</div>
